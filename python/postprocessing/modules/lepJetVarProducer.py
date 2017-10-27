@@ -109,7 +109,7 @@ class lepJetVarProducer(Module):
         if ((jet_rawPt - lepton.pt) < 1e-4): # matched to jet containing only the lepton
             return 1.
         else:
-            return (jet_rawPt - lepton.pt*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton.pt
+            return min(lepton.pt/max(1., ((jet_rawPt - lepton.pt*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton.pt)), 1.5)
         
     def analyze(self, event):
         jets = Collection(event, self.jetBranchName)
