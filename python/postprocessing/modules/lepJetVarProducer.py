@@ -74,13 +74,13 @@ class lepJetVarProducer(Module):
         # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
             if library not in ROOT.gSystem.GetLibraries():
-                print "Load Library '%s'" % library.replace("lib", "")
+                print("Load Library '%s'" % library.replace("lib", ""))
                 ROOT.gSystem.Load(library)
 
     def beginJob(self):
         # initialize L1 jet energy corrections
         # (cf. https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#OffsetJEC )
-        print "Loading L1 jet energy corrections from file '%s'" % os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName)
+        print("Loading L1 jet energy corrections from file '%s'" % os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName))
         self.l1corrParams = ROOT.JetCorrectorParameters(os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName))
         v_l1corrParams = getattr(ROOT, 'vector<JetCorrectorParameters>')()
         v_l1corrParams.push_back(self.l1corrParams)
