@@ -71,7 +71,7 @@ class lepJetVarProducer(Module):
         self.l1corrInputFilePath = os.environ['CMSSW_BASE'] + "/src/tthAnalysis/NanoAODTools/data/"
         self.l1corrInputFileName = "Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt"
 
-        # load libraries for loading jet energy corrections from txt files
+        # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
             if library not in ROOT.gSystem.GetLibraries():
                 print "Load Library '%s'" % library.replace("lib", "")
@@ -105,7 +105,7 @@ class lepJetVarProducer(Module):
         self.l1corr.setJetA(jet.area)
         self.l1corr.setRho(rho)
         jet_l1corrPt = self.l1corr.getCorrection()*jet_rawPt
-        print("jet eta = %1.1f, rho = %1.1f: jet pT = %1.1f (raw), %1.1f (L1 corr), %1.1f (corr)" % (jet.eta, rho, jet_rawPt, jet_l1corrPt, jet.pt))
+        #print("jet eta = %1.1f, rho = %1.1f: jet pT = %1.1f (raw), %1.1f (L1 corr), %1.1f (corr)" % (jet.eta, rho, jet_rawPt, jet_l1corrPt, jet.pt))
         if ((jet_rawPt - lepton.pt) < 1e-4): # matched to jet containing only the lepton
             return 1.
         else:
