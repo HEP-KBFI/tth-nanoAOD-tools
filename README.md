@@ -48,7 +48,9 @@ export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
 mkdir -p $NANOAOD_OUTPUT_DIR
 
 #  add the missing branches
-./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules genLepMerger,genHiggsDecayMode,lepJetVar,btagSF,puWeight,jecUncertAll_cpp . ../NanoAOD/test/nano.root
+./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules \
+  genLepMerger,genHiggsDecayMode,lepJetVar,btagSF,puWeight,jecUncertAll_cpp \
+  $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 
 # the final output file will be at:
 ls -l $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim.root
