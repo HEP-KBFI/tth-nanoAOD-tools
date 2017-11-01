@@ -53,7 +53,7 @@ mkdir -p $NANOAOD_OUTPUT_DIR
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 
 # the final output file will be at:
-ls -l $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim.root
+ls -l $NANOAOD_OUTPUT_DIR/nano_Skim.root
 ```
 
 If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
