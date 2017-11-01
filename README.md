@@ -40,8 +40,6 @@ cmsRun nano_cfg.py                           # probably change the paths to the 
 
 ## How to run the post-processing steps:
 
-At the time of writing it seems that each module can only be executed separately and not all-in-one shot.
-This means that every time we want to add branch(es) to the nanoAOD Ntuple, we have to create a new file.
 The output file name is created by appending `_Skim` to the basename of the input file.
 
 ```bash
@@ -49,27 +47,14 @@ cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
 export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
 mkdir -p $NANOAOD_OUTPUT_DIR
 
-#  add lepton-to-jet variables jetPtRatio and jetBtagCSV
-./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer lepJetVar                 $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
-
-# pull out stable generator level electrons and muons to a new branch
-./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.modules.genLepMerger genLepMerger                   $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim.root
-
-# add Higgs decay mode at generator level
-./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer genHiggsDecayMode $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim_Skim.root
-
-# add b-tagging scale factors
-./scripts/nano_postproc.py -I PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer btagSF                  $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim_Skim_Skim.root
-
-# add pile-up weights
-./scripts/nano_postproc.py -I PhysicsTools.NanoAODTools.postprocessing.examples.puWeightProducer puWeight                 $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim_Skim_Skim_Skim.root
-
-# add JECs
-./scripts/nano_postproc.py -I PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties jecUncertAll_cpp      $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim_Skim_Skim_Skim_Skim.root
+#  add the missing branches
+./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules genLepMerger,genHiggsDecayMode,lepJetVar,btagSF,puWeight,jecUncertAll_cpp . ../NanoAOD/test/nano.root
 
 # the final output file will be at:
-ls -l $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim_Skim_Skim_Skim_Skim_Skim.root
+ls -l $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_Skim.root
 ```
+
+If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
 
 ## TODO
 

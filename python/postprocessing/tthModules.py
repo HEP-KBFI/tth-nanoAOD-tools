@@ -1,0 +1,6 @@
+from tthAnalysis.NanoAODTools.postprocessing.modules.genLepMerger import genLepMerger
+from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
+from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVar
+from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSF
+from PhysicsTools.NanoAODTools.postprocessing.examples.puWeightProducer import puWeight
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties import jecUncertAll_cpp
