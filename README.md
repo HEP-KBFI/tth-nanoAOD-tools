@@ -30,7 +30,7 @@ cmsRun nano_cfg.py                           # probably change the paths to the 
 
 ## How to run the post-processing steps:
 
-The output file name is created by appending `_Skim` to the basename of the input file.
+The output file name is created by appending a suffix to the basename of the input file, specified by the option `-s`.
 
 ```bash
 cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
@@ -52,19 +52,19 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 # remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
 ./scripts/nano_postproc.py -s i -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt \
   $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_i.root
-# time (2.7 ms / event)
-# real    0m22.828s
-# user    0m21.486s
-# sys     0m0.616s
-# new size: 13M (1.5 kB / event)
-# (with genAll the final size is 14MB)
+# time (2 ms / event)
+# real    0m16.521s
+# user    0m14.140s
+# sys     0m0.606s
+# new size: 8.5M (1 kB / event)
+# (with genAll the final size is 11MB and additional 2 seconds)
 
 # the final output file will be at:
 ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
 
 # final statistics:
-# time it takes to process a single event: 14.4 ms (< 1 day / 200 PCs / 1B events*) or w/ genAll 16.3 ms
-# amount of bytes taken by one event:      1.5 kB (46% reduction)
+# time it takes to process a single event: 13.7 ms (< 1 day / 150 PCs / 1B events*) or w/ genAll 15.7 ms
+# amount of bytes taken by one event:      1 kB (60% reduction; 1GB / 1B events*) or w/ genAll 1.4 kB
 # * 2016 VHbb Ntuples have 4B events, but the events are preselected
 ```
 
@@ -73,15 +73,11 @@ If you want to add more modules then you must add the relevant import statements
 ## TODO
 
 1. Module for computing MET systematic uncertainties ([pull request](https://github.com/cms-nanoAOD/nanoAOD-tools/pull/24) currently open);
-2. ECAL variables (eleDEta, eleDPhi, eleooEmooP) missing (but it might be the case that they'll be replaced with a single bit flag indicating whether a given lepton passes the ECAL cuts or not);
-3. Compute corr_JECUp and corr_JECDown from the branches generated with jecUncertainties module
-4. Compute miniIsoCharged and miniIsoNeutral for leptons from miniPFRelIso_all and miniPFRelIso_chg
-5. Fallback tau ID variables idCI3hit and isoCI3hit missing
-6. tH event weights lheWeightSM missing
-7. Use charge of the generator-level hadronic tau instead of pdgID?
-8. Add charge to the generator-level particles
+1. ECAL variables (eleDEta, eleDPhi, eleooEmooP) missing (but it might be the case that they'll be replaced with a single bit flag indicating whether a given lepton passes the ECAL cuts or not);
+1. Fallback tau ID variables idCI3hit and isoCI3hit missing
+1. tH event weights lheWeightSM missing
 
-The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-KBFI/tth-htt/tree/nanoAOD) need to be renamed where necessary.
+The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-KBFI/tth-htt/tree/nanoAOD) need to be renamed where necessary, or recomputed (such as JECDown, JECUp, miniIsoCharged and miniIsoNeutral; we don't do this computation here as we would need to loop over the events again because it is not possible to read the variables that are created within the event loop).
 
 ## Links
 

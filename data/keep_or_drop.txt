@@ -1,5 +1,5 @@
 keep *
-drop *GenPart
+drop *GenPart*
 drop *Photon*
 drop *SoftActivityJet*
 drop *FatJet*
