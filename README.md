@@ -13,23 +13,13 @@ cmsenv
 
 # clone necessary repositories
 git cms-merge-topic cms-nanoAOD:master
-git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git     $CMSSW_BASE/src/PhysicsTools/NanoAODTools
-git clone https://github.com/HEP-KBFI/tth-nanoAOD-tools        $CMSSW_BASE/src/tthAnalysis/NanoAODTools
+git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git $CMSSW_BASE/src/PhysicsTools/NanoAODTools
+git clone https://github.com/HEP-KBFI/tth-nanoAOD-tools    $CMSSW_BASE/src/tthAnalysis/NanoAODTools
 
 # compile the thing
 cd $CMSSW_BASE/src
 scram b -j 18
 ```
-
-At the time of writing it's not clear if the masses of generator-level particles will be added to the standard nanoAOD solution or not ([link](https://github.com/cms-nanoAOD/cmssw/issues/51) to the discussion).
-Currently, we go with the easy route and add the branch ourselves.
-This can be achieved by adding one more line to `$CMSSW_BASE/src/PhysicsTools/NanoAOD/python/genparticles_cff.py`:
-
-```python
-mass = Var("mass",float,precision=8),
-```
-
-to the `genParticleTable` variable.
 
 ## Generate an example nanoAOD file
 
@@ -46,14 +36,36 @@ The output file name is created by appending `_Skim` to the basename of the inpu
 cd $CMSSW_BASE/src/PhysicsTools/NanoAODTools
 export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
 mkdir -p $NANOAOD_OUTPUT_DIR
+# original size: 22M (8096 events -> 2.8 kB / event)
 
 #  add the missing branches
-./scripts/nano_postproc.py -I tthAnalysis.NanoAODTools.postprocessing.tthModules \
-  genLepMerger,genHiggsDecayMode,lepJetVar,btagSF,puWeight,jecUncertAll_cpp \
+./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules \
+  genHiggsDecayMode,lepJetVar,genLepton,btagSF,puWeight,jecUncert_cpp \
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
+# time (11.7 ms / event)
+# real    1m35.279s
+# user    1m26.909s
+# sys     0m5.622s
+# new size: 16M (1.9 kB / event)
+# (computing all gen lvl particles by replacing genLepton with genAll adds another 15 seconds and 2 MB)
+
+# remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
+./scripts/nano_postproc.py -s i -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt \
+  $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_i.root
+# time (2.7 ms / event)
+# real    0m22.828s
+# user    0m21.486s
+# sys     0m0.616s
+# new size: 13M (1.5 kB / event)
+# (with genAll the final size is 14MB)
 
 # the final output file will be at:
-ls -l $NANOAOD_OUTPUT_DIR/nano_Skim.root
+ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
+
+# final statistics:
+# time it takes to process a single event: 14.4 ms (< 1 day / 200 PCs / 1B events*) or w/ genAll 16.3 ms
+# amount of bytes taken by one event:      1.5 kB (46% reduction)
+# * 2016 VHbb Ntuples have 4B events, but the events are preselected
 ```
 
 If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
@@ -74,4 +86,4 @@ The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-K
 ## Links
 
 1. Official tool for post-processing the nanoAOD Ntuples: https://github.com/cms-nanoAOD/nanoAOD-tools
-2. nanoAOD fork of CMSSW (relevant addition): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD
+2. nanoAOD fork of CMSSW (complementary): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD

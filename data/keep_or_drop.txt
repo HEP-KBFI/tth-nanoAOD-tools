@@ -1,0 +1,12 @@
+keep *
+drop *GenPart
+drop *Photon*
+drop *SoftActivityJet*
+drop *FatJet*
+drop *SubJet*
+drop *TrigObj*
+drop *IsoTrack*
+drop *OtherPV*
+drop PV*
+drop nSV
+drop SV*
