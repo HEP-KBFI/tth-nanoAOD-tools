@@ -15,6 +15,10 @@ class missingProducer(Module):
     self.eleDPhi = "%s_%s" % (self.eleBranch, "eleDPhi") # deltaPhiSuperClusterTrackAtVtx
     self.nele    = "n%s" % self.eleBranch
 
+    self.tauBranch = "Tau"
+    self.tauidCI3hit = "%s_%s" % (self.tauBranch, "idCI3hit") # ByLoose/Medium/TightCombinedIsolationDBSumPtCorr3Hits
+    self.ntau = "n%s" % self.tauBranch
+
   def beginJob(self):
     pass
 
@@ -23,16 +27,19 @@ class missingProducer(Module):
 
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
-    self.out.branch(self.eleDEta, "F", lenVar = self.nele)
-    self.out.branch(self.eleDPhi, "F", lenVar = self.nele)
+    self.out.branch(self.eleDEta,     "F", lenVar = self.nele)
+    self.out.branch(self.eleDPhi,     "F", lenVar = self.nele)
+    self.out.branch(self.tauidCI3hit, "I", lenVar = self.ntau)
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     pass
 
   def analyze(self, event):
     eles = Collection(event, self.eleBranch)
-    self.out.fillBranch(self.eleDEta, [0.] * len(eles))
-    self.out.fillBranch(self.eleDPhi, [0.] * len(eles))
+    taus = Collection(event, self.tauBranch)
+    self.out.fillBranch(self.eleDEta,     [0.] * len(eles))
+    self.out.fillBranch(self.eleDPhi,     [0.] * len(eles))
+    self.out.fillBranch(self.tauidCI3hit, [0] * len(taus))
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
