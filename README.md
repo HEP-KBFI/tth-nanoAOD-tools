@@ -39,8 +39,11 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 # original size: 22M (8096 events -> 2.8 kB / event)
 
 #  add the missing branches
+# NB! exclude jetmetUncertainties unless the PR https://github.com/cms-nanoAOD/nanoAOD-tools/pull/24
+#     has not been merged yet (or if you haven't applied the path yourself)
+# NB! missing module creates dummy branches in order to maintain the compatibility w/ the 2016 analysis
 ./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules \
-  genHiggsDecayMode,lepJetVar,genLepton,btagSF,puWeight,jecUncert_cpp \
+  genHiggsDecayMode,lepJetVar,genLepton,btagSF,puWeight,jecUncert_cpp,missing,jetmetUncertainties \
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 # time (11.7 ms / event)
 # real    1m35.279s
@@ -73,7 +76,7 @@ If you want to add more modules then you must add the relevant import statements
 ## TODO
 
 1. Module for computing MET systematic uncertainties ([pull request](https://github.com/cms-nanoAOD/nanoAOD-tools/pull/24) currently open);
-1. ECAL variables (eleDEta, eleDPhi, eleooEmooP) missing (but it might be the case that they'll be replaced with a single bit flag indicating whether a given lepton passes the ECAL cuts or not);
+1. ECAL variables (eleDEta, eleDPhi) missing (but it might be the case that they'll be replaced with a single bit flag indicating whether a given lepton passes the ECAL cuts or not);
 1. Fallback tau ID variables idCI3hit and isoCI3hit missing
 1. tH event weights lheWeightSM missing
 
@@ -82,4 +85,4 @@ The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-K
 ## Links
 
 1. Official tool for post-processing the nanoAOD Ntuples: https://github.com/cms-nanoAOD/nanoAOD-tools
-2. nanoAOD fork of CMSSW (complementary): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD
+1. nanoAOD fork of CMSSW (complementary): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD
