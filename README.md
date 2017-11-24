@@ -40,8 +40,8 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 
 # NB! exclude jetmetUncertainties unless the PR https://github.com/cms-nanoAOD/nanoAOD-tools/pull/24
 #     has not been merged yet (or if you haven't applied the path yourself)
-./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules \
-  genHiggsDecayMode,lepJetVar,genLepton,btagSF,puWeight,jecUncert_cpp,jetmetUncertainties \
+./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules             \
+  genHiggsDecayMode,lepJetVar,genLepton,btagSF,puWeight,jecUncert_cpp,jetmetUncertainties,tauIDLog \
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 # time (11.7 ms / event)
 # real    1m35.279s
