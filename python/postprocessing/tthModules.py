@@ -3,6 +3,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import le
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
+from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSF
 from PhysicsTools.NanoAODTools.postprocessing.examples.puWeightProducer import puWeight
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties import jecUncert_cpp

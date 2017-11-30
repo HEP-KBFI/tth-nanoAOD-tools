@@ -28,6 +28,11 @@ class eventCountHistogramProducer(Module):
     pass
 
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+    pass
+
+  def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
+    self.out = wrappedOutputTree
+
     runTree = inputFile.Get(self.runTreeName)
     if not runTree:
       raise ValueError('No such object in file %s: %s' % (inputFile.GetName(), self.runTreeName))
@@ -35,7 +40,8 @@ class eventCountHistogramProducer(Module):
     runTree_branches = [br.GetName() for br in runTree.GetListOfBranches()]
     for countType in self.countTypes:
       if countType['branchIn'] not in runTree_branches:
-        raise ValueError("No branch named '%s' in tree '%s'" % (countType['branchIn'], self.runTreeName))
+        raise ValueError(
+          "No branch named '%s' in tree '%s'" % (countType['branchIn'], self.runTreeName))
 
       runTree.SetBranchAddress(countType['branchIn'], countType['branchArr'])
       countType['histogram'] = ROOT.TH1F(countType['histoOut'], countType['histoOut'], 1, 0., 2.)
@@ -49,9 +55,6 @@ class eventCountHistogramProducer(Module):
     outputFile.cd()
     for countType in self.countTypes:
       countType['histogram'].Write()
-
-  def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-    pass
 
   def analyze(self, event):
     return True
