@@ -60,7 +60,9 @@ class lepJetVarProducer(Module):
     def __init__(self, btagAlgos):
         # define lepton and jet branches and branch used to access energy densitity rho
         # (the latter is needed to compute L1 jet energy corrections)
-        self.leptonBranchNames = [ "Electron", "Muon" ]
+        self.electronBranchName = "Electron"
+        self.muonBranchName     = "Muon"
+        self.leptonBranchNames = [ self.electronBranchName, self.muonBranchName ]
         self.jetBranchName = "Jet"
         self.rhoBranchName = "fixedGridRhoFastjetAll"
 
@@ -114,18 +116,19 @@ class lepJetVarProducer(Module):
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
-    def getPtRatio(self, lepton, jet, rho):
+    def getPtRatio(self, lepton, jet, rho, isElectron):
         jet_rawPt = (1. - jet.rawFactor)*jet.pt
         self.l1corr.setJetEta(jet.eta)
         self.l1corr.setJetPt(jet_rawPt)
         self.l1corr.setJetA(jet.area)
         self.l1corr.setRho(rho)
         jet_l1corrPt = self.l1corr.getCorrection()*jet_rawPt
+        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
         #print("jet eta = %1.1f, rho = %1.1f: jet pT = %1.1f (raw), %1.1f (L1 corr), %1.1f (corr)" % (jet.eta, rho, jet_rawPt, jet_l1corrPt, jet.pt))
-        if ((jet_rawPt - lepton.pt) < 1e-4): # matched to jet containing only the lepton
+        if ((jet_rawPt - lepton_pt_uncorr) < 1e-4): # matched to jet containing only the lepton
             return 1.
         else:
-            return min(lepton.pt/max(1., ((jet_rawPt - lepton.pt*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton.pt)), 1.5)
+            return min(lepton_pt_uncorr/max(1., ((jet_rawPt - lepton_pt_uncorr*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton_pt_uncorr)), 1.5)
 
     def analyze(self, event):
         jets = Collection(event, self.jetBranchName)
@@ -146,7 +149,7 @@ class lepJetVarProducer(Module):
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(-1.)
                 else:
-                    leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho))
+                    leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho, leptonBranchName == self.electronBranchName))
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(getattr(jet, self.btagAlgoMap[btagAlgo]))
 
