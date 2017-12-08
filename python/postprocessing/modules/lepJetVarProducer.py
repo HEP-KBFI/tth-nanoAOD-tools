@@ -57,15 +57,30 @@ def matchObjectCollection(ptcs, matchCollection, deltaRMax = 0.4, filter = lambd
 
 class lepJetVarProducer(Module):
 
-    def __init__(self):
+    def __init__(self, btagAlgos):
         # define lepton and jet branches and branch used to access energy densitity rho
         # (the latter is needed to compute L1 jet energy corrections)
         self.leptonBranchNames = [ "Electron", "Muon" ]
         self.jetBranchName = "Jet"
         self.rhoBranchName = "fixedGridRhoFastjetAll"
-        
-        self.btagAlgo = "csvv2"
-        
+
+        # fail as early as possible
+        self.btagAlgos = btagAlgos
+        self.btagAlgoMap = {
+          'csvv2' : 'btagCSVV2',
+          'deep'  : 'btagDeepB',
+          'cmva'  : 'btagCMVA',
+        }
+        for btagAlgo in self.btagAlgos:
+          if btagAlgo not in self.btagAlgoMap:
+            raise ValueError("Invalid b-tagging algorithm: %s" % btagAlgo)
+
+        self.nLepton_branchNames = { leptonBranchName : "n%s" % leptonBranchName for leptonBranchName in self.leptonBranchNames }
+        self.jetPtRatio_branchNames = { leptonBranchName : "%s_jetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetBtagDiscr_branchNames = { leptonBranchName : {
+            btagAlgo : "%s_jetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
+          } for leptonBranchName in self.leptonBranchNames }
+
         # define txt file with L1 jet energy corrections
         # (downloaded from https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC )
         self.l1corrInputFilePath = os.environ['CMSSW_BASE'] + "/src/tthAnalysis/NanoAODTools/data/"
@@ -92,8 +107,9 @@ class lepJetVarProducer(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
         for leptonBranchName in self.leptonBranchNames:
-            self.out.branch("%s_%s" % (leptonBranchName, "jetPtRatio"), "F", lenVar = "n%s" % leptonBranchName)
-            self.out.branch("%s_%s" % (leptonBranchName, "jetBtagCSV"), "F", lenVar = "n%s" % leptonBranchName)
+            self.out.branch(self.jetPtRatio_branchNames[leptonBranchName], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
+            for btagAlgo in self.jetBtagDiscr_branchNames[leptonBranchName]:
+              self.out.branch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
@@ -110,41 +126,39 @@ class lepJetVarProducer(Module):
             return 1.
         else:
             return min(lepton.pt/max(1., ((jet_rawPt - lepton.pt*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton.pt)), 1.5)
-        
+
     def analyze(self, event):
         jets = Collection(event, self.jetBranchName)
 
-        btagDiscr = None
-        if self.btagAlgo == "csvv2":
-            btagDiscr = "btagDeepB"
-        elif self.algo == "cmva":
-            btagDiscr = "btagCMVA"
-        else:
-            raise ValueError("ERROR: Invalid algorithm '%s'! Please choose either 'csvv2' or 'cmva'." % self.btagAlgo)
-
         rho = getattr(event, self.rhoBranchName)
-    
+
         for leptonBranchName in self.leptonBranchNames:
             leptons = Collection(event, leptonBranchName)
 
             leptons_jetPtRatio = []
-            leptons_jetBtagCSV = []
+            leptons_jetBtagDiscr = { btagAlgo : [] for btagAlgo in self.btagAlgos }
 
             pairs = matchObjectCollection(leptons, jets)
             for lepton in leptons:
                 jet = pairs[lepton]
                 if jet is None:
                     leptons_jetPtRatio.append(-1.)
-                    leptons_jetBtagCSV.append(-1.)
-                else:            
+                    for btagAlgo in self.btagAlgos:
+                      leptons_jetBtagDiscr[btagAlgo].append(-1.)
+                else:
                     leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho))
-                    leptons_jetBtagCSV.append(getattr(jet, btagDiscr))
+                    for btagAlgo in self.btagAlgos:
+                      leptons_jetBtagDiscr[btagAlgo].append(getattr(jet, self.btagAlgoMap[btagAlgo]))
 
-            self.out.fillBranch("%s_%s" % (leptonBranchName, "jetPtRatio"), leptons_jetPtRatio)
-            self.out.fillBranch("%s_%s" % (leptonBranchName, "jetBtagCSV"), leptons_jetBtagCSV)
+            self.out.fillBranch(self.jetPtRatio_branchNames[leptonBranchName], leptons_jetPtRatio)
+            for btagAlgo in self.btagAlgos:
+              self.out.fillBranch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], leptons_jetBtagDiscr[btagAlgo])
 
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
 
-lepJetVar = lambda : lepJetVarProducer()
+lepJetVarBTagAll   = lambda : lepJetVarProducer(["csvv2", "deep", "cmva"])
+lepJetVarBTagCSVv2 = lambda : lepJetVarProducer(["csvv2"])
+lepJetVarBTagDeep  = lambda : lepJetVarProducer(["deep"])
+lepJetVarBTagCMVA  = lambda : lepJetVarProducer(["cmva"])
