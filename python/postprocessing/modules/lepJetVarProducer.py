@@ -79,6 +79,8 @@ class lepJetVarProducer(Module):
 
         self.nLepton_branchNames = { leptonBranchName : "n%s" % leptonBranchName for leptonBranchName in self.leptonBranchNames }
         self.jetPtRatio_branchNames = { leptonBranchName : "%s_jetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetPtRelv2_branchNames = { leptonBranchName : "%s_jetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+
         self.jetBtagDiscr_branchNames = { leptonBranchName : {
             btagAlgo : "%s_jetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
           } for leptonBranchName in self.leptonBranchNames }
@@ -110,25 +112,51 @@ class lepJetVarProducer(Module):
         self.out = wrappedOutputTree
         for leptonBranchName in self.leptonBranchNames:
             self.out.branch(self.jetPtRatio_branchNames[leptonBranchName], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
+            self.out.branch(self.jetPtRelv2_branchNames[leptonBranchName], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
+
             for btagAlgo in self.jetBtagDiscr_branchNames[leptonBranchName]:
               self.out.branch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
-    def getPtRatio(self, lepton, jet, rho, isElectron):
-        jet_rawPt = (1. - jet.rawFactor)*jet.pt
-        self.l1corr.setJetEta(jet.eta)
+    def jetLepAwareJEC(self, lepton, jet, rho, isElectron):
+        corrFactor = (1. - jet.rawFactor)
+        jet_rawPt = corrFactor*jet.pt
+
+        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
+        p4l = ROOT.TLorentzVector()
+        p4l.SetPtEtaPhiM(lepton_pt_uncorr, lepton.eta, lepton.phi, lepton.mass)
+
+        if ((jet_rawPt - lepton_pt_uncorr) < 1e-4):
+            return p4l
+
+        p4j = ROOT.TLorentzVector()
+        p4j.SetPtEtaPhiM(jet.pt, jet.eta, jet.phi, jet.mass)
+
         self.l1corr.setJetPt(jet_rawPt)
+        self.l1corr.setJetEta(jet.eta)
         self.l1corr.setJetA(jet.area)
         self.l1corr.setRho(rho)
-        jet_l1corrPt = self.l1corr.getCorrection()*jet_rawPt
+        l1corrFactor = self.l1corr.getCorrection()
+
+        p4j_lepAware = (p4j * corrFactor - p4l * (1. / l1corrFactor)) * (1. / corrFactor) + p4l
+        return p4j_lepAware
+
+    def getPtRatio(self, lepton, jet, rho, isElectron):
+        p4j_lepAware = self.jetLepAwareJEC(lepton, jet, rho, isElectron)
         lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
-        #print("jet eta = %1.1f, rho = %1.1f: jet pT = %1.1f (raw), %1.1f (L1 corr), %1.1f (corr)" % (jet.eta, rho, jet_rawPt, jet_l1corrPt, jet.pt))
-        if ((jet_rawPt - lepton_pt_uncorr) < 1e-4): # matched to jet containing only the lepton
-            return 1.
-        else:
-            return min(lepton_pt_uncorr/max(1., ((jet_rawPt - lepton_pt_uncorr*(1./(jet_l1corrPt/jet_rawPt)))*(jet.pt/jet_rawPt) + lepton_pt_uncorr)), 1.5)
+        return min(lepton_pt_uncorr / max(1., p4j_lepAware.Pt()), 1.5)
+
+    def getPtRelv2(self, lepton, jet, rho, isElectron):
+        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
+        p4l = ROOT.TLorentzVector()
+        p4l.SetPtEtaPhiM(lepton_pt_uncorr, lepton.eta, lepton.phi, lepton.mass)
+
+        p4j_lepAware = self.jetLepAwareJEC(lepton, jet, rho, isElectron)
+        p4j_minu_p4l = p4j_lepAware - p4l
+
+        return 0. if p4j_minu_p4l.Rho() < 1e-4 else p4l.Perp(p4j_minu_p4l.Vect())
 
     def analyze(self, event):
         jets = Collection(event, self.jetBranchName)
@@ -139,6 +167,7 @@ class lepJetVarProducer(Module):
             leptons = Collection(event, leptonBranchName)
 
             leptons_jetPtRatio = []
+            leptons_jetPtRelv2 = []
             leptons_jetBtagDiscr = { btagAlgo : [] for btagAlgo in self.btagAlgos }
 
             pairs = matchObjectCollection(leptons, jets)
@@ -146,14 +175,19 @@ class lepJetVarProducer(Module):
                 jet = pairs[lepton]
                 if jet is None:
                     leptons_jetPtRatio.append(-1.)
+                    leptons_jetPtRelv2.append(-1.)
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(-1.)
                 else:
                     leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho, leptonBranchName == self.electronBranchName))
+                    leptons_jetPtRelv2.append(self.getPtRelv2(lepton, jet, rho, leptonBranchName == self.electronBranchName))
+
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(getattr(jet, self.btagAlgoMap[btagAlgo]))
 
             self.out.fillBranch(self.jetPtRatio_branchNames[leptonBranchName], leptons_jetPtRatio)
+            self.out.fillBranch(self.jetPtRelv2_branchNames[leptonBranchName], leptons_jetPtRelv2)
+
             for btagAlgo in self.btagAlgos:
               self.out.fillBranch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], leptons_jetBtagDiscr[btagAlgo])
 
