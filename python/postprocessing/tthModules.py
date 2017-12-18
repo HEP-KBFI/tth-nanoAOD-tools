@@ -2,12 +2,10 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import 
 from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVarBTagAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
+from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2, btagSF_cmva
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSF
 from PhysicsTools.NanoAODTools.postprocessing.examples.puWeightProducer import puWeight
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties import jecUncert_cpp
-try:
-  from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties
-except ImportError:
-  print("Module PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties not available")
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties
