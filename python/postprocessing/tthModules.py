@@ -1,4 +1,4 @@
-from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import genLepton, genAll
+from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import genAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVarBTagAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog

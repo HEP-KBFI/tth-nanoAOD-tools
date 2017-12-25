@@ -480,8 +480,8 @@ genLeptonEntry                      = ("GenLep",                         genLept
 genHiggsEntry                       = ("GenHiggs",                       genHiggsSelection)
 genHiggsDaughtersEntry              = ("GenHiggsDaughters",              genHiggsDaughtersSelection)
 genNuEntry                          = ("GenNu",                          genNuSelection)
-genWZquarkEntry                     = ("GenWZquark",                     genWZquarkSelection)
-genVbosonEntry                      = ("GenVboson",                      genVbosonSelection)
+genWZquarkEntry                     = ("GenWZQuark",                     genWZquarkSelection)
+genVbosonEntry                      = ("GenVbosons",                     genVbosonSelection)
 genTauEntry                         = ("GenTau",                         (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_TAU)))
 genLeptonicTauEntry                 = ("GenLeptonicTau",                 (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_LEPTONIC_TAU)))
 genHadronicTauEntry                 = ("GenHadronicTau",                 (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_HADRONIC_TAU)))
@@ -499,6 +499,7 @@ genNuFromLeptonicTauFromTopEntry    = ("GenNuFromLeptonicTauFromTop",    (lambda
 genNuTauFromLeptonicTauFromTopEntry = ("GenNuTauFromLeptonicTauFromTop", (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_LEPTON_NU_FROM_TAU_FROM_TOP)))
 genLepFromTauFromTopEntry           = ("GenLepFromTauFromTop",           (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_LEPTON_FROM_TAU_FROM_TOP)))
 genQuarkFromTopEntry                = ("GenQuarkFromTop",                (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_QUARK_FROM_W_FROM_TOP)))
+genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_BQUARK_FROM_TOP)))
 
 # provide these variables as the 2nd arguments to the import option for the nano_postproc.py script
 genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all leptons
@@ -524,6 +525,7 @@ genNuFromLeptonicTauFromTop    = lambda : genParticleProducer(dict([genNuFromLep
 genNuTauFromLeptonicTauFromTop = lambda : genParticleProducer(dict([genNuTauFromLeptonicTauFromTopEntry])) # only lepton neutrinos (vl) from t -> W b, W -> tau vtau, tau -> l vl vtau2 decay
 genLepFromTauFromTop           = lambda : genParticleProducer(dict([genLepFromTauFromTopEntry]))           # only leptons (l) from t -> W b, W -> tau vtau, tau -> l vl vtau2 decay
 genQuarkFromTop                = lambda : genParticleProducer(dict([genQuarkFromTopEntry]))                # only quarks (q, q') from t -> W b, W -> q q' decay
+genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFromTopEntry]))               # only b-quarks (b) from t -> W b
 
 genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
@@ -549,4 +551,5 @@ genAll = lambda : genParticleProducer(dict([
     genNuTauFromLeptonicTauFromTopEntry,
     genLepFromTauFromTopEntry,
     genQuarkFromTopEntry,
+    genBQuarkFromTopEntry,
   ]))
