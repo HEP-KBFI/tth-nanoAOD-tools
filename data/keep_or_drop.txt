@@ -2,13 +2,10 @@ keep *
 drop *GenPart*
 drop *Photon*
 drop *SoftActivityJet*
-drop *FatJet*
-drop *SubJet*
 drop *IsoTrack*
 drop *OtherPV*
 drop nSV
 drop SV*
-drop *GenJetAK8*
 drop *GenDressedLepton*
 drop CaloMET_*
 drop HLT_*Jet*
