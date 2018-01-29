@@ -82,22 +82,18 @@ fi
 
 export CUSTOMISE_COMMANDS="process.MessageLogger.cerr.FwkReport.reportEvery = 1000\\n\
                            process.source.fileNames = []\\n"
-export CUSTOMISE_COMMANDS_DATA="$CUSTOMISE_COMMANDS\
-                                process.GlobalTag.globaltag = '$AUTOCOND_DATA'\\n"
-export CUSTOMISE_COMMANDS_MC="$CUSTOMISE_COMMANDS\
-                              process.GlobalTag.globaltag = '$AUTOCOND_MC'\\n"
 
 # for data
-cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD         \
-  --conditions run2_data --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_data.py"                               \
-  --customise_commands="$CUSTOMISE_COMMANDS_DATA" --lumiToProcess="$JSON_LUMI"
+cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD              \
+  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
+  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_data.py"                                    \
+  --customise_commands="$CUSTOMISE_COMMANDS" --lumiToProcess="$JSON_LUMI"
 
 # for MC
-cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM   \
-  --conditions run2_mc --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_mc.py"                               \
-  --customise_commands="$CUSTOMISE_COMMANDS_MC"
+cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM        \
+  --conditions $AUTOCOND_MC --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
+  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_mc.py"                                    \
+  --customise_commands="$CUSTOMISE_COMMANDS"
 
 echo "Submitting jobs ..."
 cat $DATASET_FILE | while read LINE; do
