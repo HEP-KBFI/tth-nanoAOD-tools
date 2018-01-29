@@ -3,8 +3,11 @@ from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 import re
 import os
 
-PREFIX = 'NanoAOD_2017_v1'
+PREFIX = 'NanoAOD_2017_v3'
 CURDIR = os.path.dirname(os.path.realpath(__file__))
+
+if 'IS_DATA' not in os.environ:
+  raise ValueError("$IS_DATA not defined")
 
 if 'DATASET' not in os.environ:
   raise ValueError("$DATASET not defined")
@@ -12,6 +15,7 @@ if 'DATASET' not in os.environ:
 if 'DATASET_PATTERN' not in os.environ:
   raise ValueError("$DATASET_PATTERN not defined")
 
+is_data         = bool(int(os.environ['IS_DATA']))
 dataset_name    = os.environ['DATASET']
 dataset_pattern = os.environ['DATASET_PATTERN']
 dataset_match   = re.match(dataset_pattern, dataset_name)
@@ -38,7 +42,7 @@ config.General.transferOutputs = True
 config.General.transferLogs    = True
 
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName   = os.path.join(CURDIR, 'nano_cfg.py')
+config.JobType.psetName   = os.path.join(CURDIR, 'nanoAOD_%s.py' % ("data" if is_data else "mc"))
 
 config.Data.inputDataset     = dataset_name
 config.Data.inputDBS         = 'global'
@@ -47,5 +51,10 @@ config.Data.unitsPerJob      = 50000
 config.Data.outLFNDirBase    = '/store/user/%s/NanoAOD_2017' % getUsernameFromSiteDB()
 config.Data.publication      = False
 config.Data.outputDatasetTag = outputDatasetTag
+
+if is_data:
+  config.Data.lumiMask = os.path.join(
+    CURDIR, '..', 'data', 'Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt'
+  )
 
 config.Site.storageSite = 'T2_EE_Estonia'
