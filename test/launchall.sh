@@ -3,6 +3,13 @@
 # DO NOT SOURCE! IT MAY KILL YOUR SHELL!
 
 SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DO_DRYRUN=false
+
+if [ $DO_DRYRUN = true ]; then
+  export DRYRUN="--dryrun";
+else
+  export DRYRUN="";
+fi
 
 if [ -z "$1" ]; then
   echo "You must supply file containing the list of samples (one sample per line) as an argument to the script";
@@ -77,5 +84,5 @@ cat $DATASET_FILE | while read LINE; do
     export IS_DATA=0;
     echo "Found MC   sample: $DATASET";
   fi
-  crab submit --config="$SCRIPT_DIRECTORY/nano_cfg_env.py" --wait
+  crab submit $DRYRUN --config="$SCRIPT_DIRECTORY/nano_cfg_env.py" --wait
 done
