@@ -13,13 +13,13 @@ print("Using {mc_or_data} settings for sample {sample_name}".format(
   sample_name = os.environ['DATASET'],
 ))
 
-process = cms.Process('NANO', eras.Run2_2017,eras.run2_nanoAOD_92X)
+process = cms.Process('NANO', eras.Run2_2017)
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
-process.GlobalTag.globaltag                      = autoCond['run2_data'] if is_data else autoCond['phase1_2017_realistic']
+process.GlobalTag.globaltag                      = autoCond['run2_data'] if is_data else autoCond['run2_mc']
 process.options                                  = cms.untracked.PSet(wantSummary = cms.untracked.bool(True))
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.maxEvents                                = cms.untracked.PSet(input = cms.untracked.int32(10000))
