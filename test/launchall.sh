@@ -70,9 +70,9 @@ echo "Generating the skeleton configuration file for CRAB submission"
 #export AUTOCOND_DATA=$(python -c "from Configuration.AlCa.autoCond import autoCond; print(autoCond['$TAG_DATA'])")
 #export AUTOCOND_MC=$(python -c "from Configuration.AlCa.autoCond import autoCond; print(autoCond['$TAG_MC'])")
 
-# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions#Global_Tags_for_2017_Nov_re_reco
+# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_2017_Nov_re_reco
 export AUTOCOND_DATA="94X_dataRun2_ReReco_EOY17_v2"
-# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions#Global_Tags_for_RunIIFall17DRStd
+# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_RunIIFall17DRStd
 export AUTOCOND_MC="94X_mc2017_realistic_v10"
 
 if [ -z "$AUTOCOND_DATA" ]; then
