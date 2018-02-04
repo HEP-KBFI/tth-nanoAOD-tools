@@ -38,10 +38,14 @@ export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
 mkdir -p $NANOAOD_OUTPUT_DIR
 # original size: 22M (8096 events -> 2.8 kB / event)
 
+# decide which modules you need to run
+NANO_MODULES_DATA="lepJetVarBTagAll,absIso,jecUncert_cpp,tauIDLog"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2,btagSF_cmva,puWeight,jetmetUncertainties"
+NANO_MODULES=NANO_MODULES_MC
+
 # NB! exclude jetmetUncertainties unless the PR https://github.com/cms-nanoAOD/nanoAOD-tools/pull/24
 #     has not been merged yet (or if you haven't applied the path yourself)
-./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules                                          \
-  genHiggsDecayMode,lepJetVarBTagAll,genAll,absIso,btagSF_csvv2,btagSF_cmva,puWeight,jecUncert_cpp,jetmetUncertainties,tauIDLog \
+./scripts/nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 # time (11.7 ms / event)
 # real    1m35.279s
