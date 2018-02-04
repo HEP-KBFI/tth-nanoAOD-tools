@@ -52,34 +52,39 @@ class countHistogramProducer(Module):
         self.histograms[histogramName]['histogram'].Write()
 
   def analyze(self, event):
-    puWeight       = getattr(event, self.puWeightName)
-    genWeight      = getattr(event, self.genWeightName)
-    LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
-
-    genWeight_sign = np.sign(genWeight)
-    countWeight    = genWeight_sign * puWeight
-
-    if len(LHEScaleWeight) != self.nLHEScaleWeight:
-      raise ValueError(
-        "The length of '%s' array (= %i) does not match to the expected length of %i" % \
-        (self.LHEScaleWeightName, len(LHEScaleWeight), self.nLHEScaleWeight)
-      )
-
     if 'histogram' in self.histograms['Count']:
       self.histograms['Count']['histogram'].Fill(1, 1)
-    if 'histogram' in self.histograms['CountWeighted']:
-      self.histograms['CountWeighted']['histogram'].Fill(1, countWeight)
-    if 'histogram' in self.histograms['CountFullWeighted']:
-      self.histograms['CountFullWeighted']['histogram'].Fill(1, genWeight * puWeight)
-    if 'histogram' in self.histograms['CountPosWeight']:
-      self.histograms['CountPosWeight']['histogram'].Fill(1, 1 if genWeight_sign > 0 else 0)
-    if 'histogram' in self.histograms['CountNegWeight']:
-      self.histograms['CountNegWeight']['histogram'].Fill(1, 1 if genWeight_sign < 0 else 0)
-    if 'histogram' in self.histograms['CountWeightedLHEWeightPdf']:
-      for lhe_scale_idx in range(self.nLHEScaleWeight):
-        self.histograms['CountWeightedLHEWeightPdf']['histogram'].Fill(
-          float(lhe_scale_idx), countWeight * LHEScaleWeight[lhe_scale_idx]
+
+    if hasattr(event, self.puWeightName) and \
+       hasattr(event, self.genWeightName) and \
+       hasattr(event, self.LHEScaleWeightName):
+
+      puWeight       = getattr(event, self.puWeightName)
+      genWeight      = getattr(event, self.genWeightName)
+      LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
+
+      genWeight_sign = np.sign(genWeight)
+      countWeight    = genWeight_sign * puWeight
+
+      if len(LHEScaleWeight) != self.nLHEScaleWeight:
+        raise ValueError(
+          "The length of '%s' array (= %i) does not match to the expected length of %i" % \
+          (self.LHEScaleWeightName, len(LHEScaleWeight), self.nLHEScaleWeight)
         )
+
+      if 'histogram' in self.histograms['CountWeighted']:
+        self.histograms['CountWeighted']['histogram'].Fill(1, countWeight)
+      if 'histogram' in self.histograms['CountFullWeighted']:
+        self.histograms['CountFullWeighted']['histogram'].Fill(1, genWeight * puWeight)
+      if 'histogram' in self.histograms['CountPosWeight']:
+        self.histograms['CountPosWeight']['histogram'].Fill(1, 1 if genWeight_sign > 0 else 0)
+      if 'histogram' in self.histograms['CountNegWeight']:
+        self.histograms['CountNegWeight']['histogram'].Fill(1, 1 if genWeight_sign < 0 else 0)
+      if 'histogram' in self.histograms['CountWeightedLHEWeightPdf']:
+        for lhe_scale_idx in range(self.nLHEScaleWeight):
+          self.histograms['CountWeightedLHEWeightPdf']['histogram'].Fill(
+            float(lhe_scale_idx), countWeight * LHEScaleWeight[lhe_scale_idx]
+          )
 
     return True
 
