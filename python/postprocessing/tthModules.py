@@ -7,6 +7,6 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBran
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSF
-from PhysicsTools.NanoAODTools.postprocessing.examples.puWeightProducer import puWeight
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties import jecUncert_cpp
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties
