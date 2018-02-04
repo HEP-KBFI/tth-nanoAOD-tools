@@ -8,13 +8,8 @@ drop nSV
 drop SV*
 drop *GenDressedLepton*
 drop CaloMET_*
-drop HLT_*Jet*
-drop HLT_PFHT*
-drop HLT_*MET*
 drop HLT_*photon*
 drop HLT_FullTrack*
-drop HLT_Physics*
 drop HLT_Random*
 drop HLT_ZeroBias*
 drop HLT_Rsq*
-drop HLT_*Filter*
