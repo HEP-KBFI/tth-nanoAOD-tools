@@ -89,15 +89,15 @@ export CUSTOMISE_COMMANDS="process.MessageLogger.cerr.FwkReport.reportEvery = 10
                            process.source.fileNames = []\\n"
 
 # for data
-cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD              \
-  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_data.py"                                    \
+cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD           \
+  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=-1 \
+  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_data.py"                                 \
   --customise_commands="$CUSTOMISE_COMMANDS" --lumiToProcess="$JSON_LUMI"
 
 # for MC
-cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM        \
-  --conditions $AUTOCOND_MC --era Run2_2017 --no_exec --fileout=tree.root --number=10000 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_mc.py"                                    \
+cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM     \
+  --conditions $AUTOCOND_MC --era Run2_2017 --no_exec --fileout=tree.root --number=-1 \
+  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_mc.py"                                 \
   --customise_commands="$CUSTOMISE_COMMANDS"
 
 echo "Submitting jobs ..."
