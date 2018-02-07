@@ -54,7 +54,7 @@ config.Data.outputDatasetTag = outputDatasetTag
 
 if is_data:
   config.Data.lumiMask = os.path.join(
-    CURDIR, '..', 'data', 'Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt'
+    CURDIR, '..', 'data', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt'
   )
 
 config.Site.storageSite = 'T2_EE_Estonia'

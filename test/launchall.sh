@@ -8,7 +8,7 @@ TAG_DATA="run2_data"
 TAG_MC="run2_mc"
 
 SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JSON_LUMI="$SCRIPT_DIRECTORY/../data/Cert_294927-306462_13TeV_PromptReco_Collisions17_JSON.txt"
+JSON_LUMI="$SCRIPT_DIRECTORY/../data/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt"
 
 if [ ! -f "$JSON_LUMI" ]; then
   echo "The JSON lumi mask '$JSON_LUMI' does not exist";
