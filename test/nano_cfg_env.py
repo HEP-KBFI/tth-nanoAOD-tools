@@ -3,7 +3,10 @@ from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 import re
 import os
 
-PREFIX = 'NanoAOD_2017_v3'
+if 'JOB_PREFIX' not in os.environ:
+  raise ValueError("$JOB_PREFIX not defined")
+
+PREFIX = os.environ['JOB_PREFIX']
 CURDIR = os.path.dirname(os.path.realpath(__file__))
 
 if 'IS_DATA' not in os.environ:

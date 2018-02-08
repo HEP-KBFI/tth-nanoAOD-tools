@@ -2,13 +2,36 @@
 
 # DO NOT SOURCE! IT MAY KILL YOUR SHELL!
 
-DO_DRYRUN=false
+export JOB_PREFIX='NanoAOD_jetSubStructure_v3'
 
-TAG_DATA="run2_data"
-TAG_MC="run2_mc"
+DO_DRYRUN=false
+ENABLE_JETSUBSTRUCTURE=true
+
+#TAG_DATA="run2_data"
+#TAG_MC="run2_mc"
 
 SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JSON_LUMI="$SCRIPT_DIRECTORY/../data/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt"
+
+remove_scheduling_lines()
+{
+  NANOCFG_FILE="$1"
+  NOF_LINES_TO_REMOVE=4
+  LINE_NR=$(grep -n "Schedule definition" "$NANOCFG_FILE" | awk -F: '{print $1}')
+
+  if [ ! -z "$LINE_NR" ]; then
+    LINE_NR_DEL="${LINE_NR}d"
+    echo "Removing the following schedule definition lines from $NANOCFG_FILE:"
+    for i in $(seq 1 $NOF_LINES_TO_REMOVE); do
+      echo "$(sed -n ${LINE_NR}p "$NANOCFG_FILE" | sed -e 's/^/> /')"
+      sed -i $LINE_NR_DEL "$NANOCFG_FILE"
+    done
+
+  else
+    echo "Could not find the point where the scheduling is defined in $NANOCFG_FILE"
+    exit 9
+  fi
+}
 
 if [ ! -f "$JSON_LUMI" ]; then
   echo "The JSON lumi mask '$JSON_LUMI' does not exist";
@@ -88,17 +111,34 @@ fi
 export CUSTOMISE_COMMANDS="process.MessageLogger.cerr.FwkReport.reportEvery = 1000\\n\
                            process.source.fileNames = []\\n"
 
+if [ $ENABLE_JETSUBSTRUCTURE = true ]; then
+  export JETSUBSTRUCTURE_COMMANDS="--magField=AutoFromDBCurrent --geometry=,Configuration.StandardSequences.GeometryDB_cff";
+  export CUSTOMISE_COMMANDS="$CUSTOMISE_COMMANDS\\nprocess.load('RecoBTag.Configuration.RecoBTag_cff')\\n\
+    from tthAnalysis.NanoAOD.addJetSubstructureObservables import addJetSubstructureObservables;\
+    addJetSubstructureObservables(process, runOnMC)\\n"
+else
+  export JETSUBSTRUCTURE_COMMANDS="";
+fi
+
+NANOCFG_DATA="$SCRIPT_DIRECTORY/nanoAOD_data.py"
+NANOCFG_MC="$SCRIPT_DIRECTORY/nanoAOD_mc.py"
+
 # for data
-cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD           \
-  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=-1 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_data.py"                                 \
-  --customise_commands="$CUSTOMISE_COMMANDS" --lumiToProcess="$JSON_LUMI"
+cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD                \
+  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=-1      \
+  --python_filename=$NANOCFG_DATA --customise_commands="${CUSTOMISE_COMMANDS/runOnMC/False}" \
+  --lumiToProcess="$JSON_LUMI"
 
 # for MC
 cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM     \
   --conditions $AUTOCOND_MC --era Run2_2017 --no_exec --fileout=tree.root --number=-1 \
-  --python_filename="$SCRIPT_DIRECTORY/nanoAOD_mc.py"                                 \
-  --customise_commands="$CUSTOMISE_COMMANDS"
+  --python_filename="$NANOCFG_MC" $JETSUBSTRUCTURE_COMMANDS                           \
+  --customise_commands="${CUSTOMISE_COMMANDS/runOnMC/True}"
+
+if [ $ENABLE_JETSUBSTRUCTURE = true ]; then
+  remove_scheduling_lines "$NANOCFG_DATA";
+  remove_scheduling_lines "$NANOCFG_MC";
+fi
 
 echo "Submitting jobs ..."
 cat $DATASET_FILE | while read LINE; do
