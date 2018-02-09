@@ -468,6 +468,7 @@ class genParticleProducer(Module):
 
     for branchBaseName in self.branchBaseNames:
       gen_arr = self.selections[branchBaseName](genParticles)
+      gen_arr = list(sorted(gen_arr, key = lambda genPart: genPart.pt, reverse = True)) # sort by pT
       for branchName, branchType in self.genBranches.items():
         self.out.fillBranch(
           "%s_%s" % (branchBaseName, branchName),
