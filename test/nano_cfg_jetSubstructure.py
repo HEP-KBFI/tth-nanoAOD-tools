@@ -9,6 +9,7 @@ from tthAnalysis.NanoAOD.addJetSubstructureObservables import addJetSubstructure
 
 import os.path
 
+isDEBUG         = False
 isMC            = True
 global_tag_data = '94X_dataRun2_ReReco_EOY17_v2'
 global_tag_mc   = '94X_mc2017_realistic_v10'
@@ -71,5 +72,23 @@ process.out = cms.OutputModule("NanoAODOutputModule",
     #compressionLevel = cms.untracked.int32(9),
     #compressionAlgorithm = cms.untracked.string("LZMA"),
 )
+
+#--------------------------------------------------------------------------------
+if isDEBUG:
+  process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
+      ignoreTotal         = cms.untracked.int32(1),
+      oncePerEventMode    = cms.untracked.bool(True),
+      moduleMemorySummary = cms.untracked.bool(True),
+  )
+  process.Tracer = cms.Service("Tracer",
+      printTimestamps = cms.untracked.bool(True),
+  )
+  if hasattr(process,'options'):
+      process.options.wantSummary = cms.untracked.bool(True)
+  else:
+      process.options = cms.untracked.PSet(
+          wantSummary = cms.untracked.bool(True),
+      )
+#--------------------------------------------------------------------------------
 
 process.end = cms.EndPath(process.out)
