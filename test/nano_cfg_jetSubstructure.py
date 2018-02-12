@@ -4,6 +4,7 @@ import FWCore.PythonUtilities.LumiList as LumiList
 
 from Configuration.StandardSequences.Eras import eras
 from Configuration.AlCa.autoCond import autoCond
+from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC, nanoAOD_customizeData
 
 from tthAnalysis.NanoAOD.addJetSubstructureObservables import addJetSubstructureObservables
 
