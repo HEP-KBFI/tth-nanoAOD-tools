@@ -55,6 +55,8 @@ config.Data.outLFNDirBase    = '/store/user/%s/NanoAOD_2017' % getUsernameFromSi
 config.Data.publication      = False
 config.Data.outputDatasetTag = outputDatasetTag
 
+config.Data.allowNonValidInputDataset = True
+
 if is_data:
   config.Data.lumiMask = JSON_LUMI
 
