@@ -2,60 +2,61 @@
 
 # DO NOT SOURCE! IT MAY KILL YOUR SHELL!
 
-export JOB_PREFIX='NanoAOD_jetSubStructure_v3'
+export JOB_PREFIX='NanoAOD_v1'
 
-DO_DRYRUN=false
-ENABLE_JETSUBSTRUCTURE=true
+# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_2017_Nov_re_reco
+export AUTOCOND_DATA="94X_dataRun2_ReReco_EOY17_v2"
+# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_RunIIFall17DRStd
+export AUTOCOND_MC="94X_mc2017_realistic_v10"
 
-#TAG_DATA="run2_data"
-#TAG_MC="run2_mc"
+export JSON_FILE="Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt"
 
-SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-JSON_LUMI="$SCRIPT_DIRECTORY/../data/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt"
 
-remove_scheduling_lines()
-{
-  NANOCFG_FILE="$1"
-  NOF_LINES_TO_REMOVE=4
-  LINE_NR=$(grep -n "Schedule definition" "$NANOCFG_FILE" | awk -F: '{print $1}')
+OPTIND=1 # reset in case getopts has been used previously in the shell
 
-  if [ ! -z "$LINE_NR" ]; then
-    LINE_NR_DEL="${LINE_NR}d"
-    echo "Removing the following schedule definition lines from $NANOCFG_FILE:"
-    for i in $(seq 1 $NOF_LINES_TO_REMOVE); do
-      echo "$(sed -n ${LINE_NR}p "$NANOCFG_FILE" | sed -e 's/^/> /')"
-      sed -i $LINE_NR_DEL "$NANOCFG_FILE"
-    done
+DRYRUN=""
+export DATASET_FILE=""
+export NANOCFG_DATA=""
+export NANOCFG_MC=""
 
-  else
-    echo "Could not find the point where the scheduling is defined in $NANOCFG_FILE"
-    exit 9
+show_help() { echo "Usage: $0 -f <dataset file> [-d] [-D <data cfg>] [-M <mc cfg>]" 1>&2; exit 0; }
+
+while getopts "h?df:D:M:" opt; do
+  case "${opt}" in
+  h|\?) show_help
+        ;;
+  f) export DATASET_FILE=${OPTARG}
+     ;;
+  d) DRYRUN="--dryrun"
+     ;;
+  D) export NANOCFG_DATA=${OPTARG}
+     ;;
+  M) export NANOCFG_MC=${OPTARG}
+     ;;
+  esac
+done
+
+check_if_exists() {
+  if [ ! -z "$1" ] && [ ! -f "$1" ]; then
+    echo "File '$1' does not exist";
+    exit 1;
   fi
 }
 
-if [ ! -f "$JSON_LUMI" ]; then
-  echo "The JSON lumi mask '$JSON_LUMI' does not exist";
-  exit 1;
-fi
-
-if [ $DO_DRYRUN = true ]; then
-  export DRYRUN="--dryrun";
-else
-  export DRYRUN="";
-fi
-
-if [ -z "$1" ]; then
-  echo "You must supply file containing the list of samples (one sample per line) as an argument to the script";
+if [ -z "$DATASET_FILE" ]; then
+  echo "You must provide the dataset file!";
   exit 2;
 fi
 
-if [ ! -f "$1" ]; then
-  echo "File '$1' does not exist!"
-  exit 3;
-fi
+SCRIPT_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export JSON_LUMI="$SCRIPT_DIRECTORY/../data/$JSON_FILE"
+
+check_if_exists "$DATASET_FILE"
+check_if_exists "$NANOCFG_DATA"
+check_if_exists "$NANOCFG_MC"
+check_if_exists "$JSON_LUMI"
 
 # Saving absolute path
-export DATASET_FILE=$1
 if [[ ! "$DATASET_FILE" =~ ^/ ]]; then
   export DATASET_FILE="$PWD/$DATASET_FILE";
   echo "Full path to the dataset file: $DATASET_FILE";
@@ -65,14 +66,14 @@ echo "Checking if crab is available ..."
 CRAB_AVAILABLE=$(which crab 2>/dev/null)
 if [ -z "$CRAB_AVAILABLE" ]; then
   echo "crab not available! please do: source /cvmfs/cms.cern.ch/crab3/crab.sh"
-  exit 4;
+  exit 3;
 fi
 
 echo "Checking if VOMS is available ..."
 VOMS_PROXY_AVAILABLE=$(which voms-proxy-info 2>/dev/null)
 if [ -z "$VOMS_PROXY_AVAILABLE" ]; then
   echo "VOMS proxy not available! please do: source /cvmfs/grid.cern.ch/glite/etc/profile.d/setup-ui-example.sh";
-  exit 5;
+  exit 4;
 fi
 
 echo "Checking if VOMS is open long enough ..."
@@ -82,62 +83,44 @@ VOMS_PROXY_TIMELEFT=$(voms-proxy-info --timeleft)
 if [ "$VOMS_PROXY_TIMELEFT" -lt "$MIN_TIMELEFT" ]; then
   echo "Less than $MIN_HOURSLEFT hours left for the proxy to be open: $VOMS_PROXY_TIMELEFT seconds";
   echo "Please update your proxy: voms-proxy-init -voms cms -valid 192:00";
-  exit 6;
+  exit 5;
 fi
 
 export DATASET_PATTERN="^/(.*)/(.*)/[0-9A-Za-z]+$"
 declare -A DATA_CATEGORIES=([SingleElectron]= [SingleMuon]= [Tau]= [DoubleEG]= [DoubleMuon]= [MuonEG]=)
 
-echo "Generating the skeleton configuration file for CRAB submission"
-
-#export AUTOCOND_DATA=$(python -c "from Configuration.AlCa.autoCond import autoCond; print(autoCond['$TAG_DATA'])")
-#export AUTOCOND_MC=$(python -c "from Configuration.AlCa.autoCond import autoCond; print(autoCond['$TAG_MC'])")
-
-# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_2017_Nov_re_reco
-export AUTOCOND_DATA="94X_dataRun2_ReReco_EOY17_v2"
-# recommended: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions#Global_Tags_for_RunIIFall17DRStd
-export AUTOCOND_MC="94X_mc2017_realistic_v10"
-
-if [ -z "$AUTOCOND_DATA" ]; then
-  echo "Could not deduce the acutal global tag for the data";
-  exit 7;
-fi
-
-if [ -z "$AUTOCOND_MC" ]; then
-  echo "Could not deduce the acutal global tag for the MC";
-  exit 8;
-fi
-
 export CUSTOMISE_COMMANDS="process.MessageLogger.cerr.FwkReport.reportEvery = 1000\\n\
                            process.source.fileNames = []\\n"
+export COMMON_COMMANDS="nanoAOD --step=NANO --era=Run2_2017 --no_exec --fileout=tree.root --number=-1"
 
-if [ $ENABLE_JETSUBSTRUCTURE = true ]; then
-  export JETSUBSTRUCTURE_COMMANDS="--magField=AutoFromDBCurrent --geometry=,Configuration.StandardSequences.GeometryDB_cff";
-  export CUSTOMISE_COMMANDS="$CUSTOMISE_COMMANDS\\nprocess.load('RecoBTag.Configuration.RecoBTag_cff')\\n\
-    from tthAnalysis.NanoAOD.addJetSubstructureObservables import addJetSubstructureObservables;\
-    addJetSubstructureObservables(process, runOnMC)\\n"
+if [ -z "$NANOCFG_DATA" ]; then
+  export NANOCFG_DATA="$SCRIPT_DIRECTORY/nanoAOD_data.py"
+  echo "Generating the skeleton configuration file for CRAB data jobs: $NANOCFG_DATA"
+  cmsDriver.py $COMMON_COMMANDS --customise_commands="$CUSTOMISE_COMMANDS"       \
+    --data --eventcontent NANOAOD --datatier NANOAOD --conditions $AUTOCOND_DATA \
+    --python_filename=$NANOCFG_DATA --lumiToProcess="$JSON_LUMI"
 else
-  export JETSUBSTRUCTURE_COMMANDS="";
+  echo "Using the following cfg for the data jobs: $NANOCFG_DATA";
 fi
 
-NANOCFG_DATA="$SCRIPT_DIRECTORY/nanoAOD_data.py"
-NANOCFG_MC="$SCRIPT_DIRECTORY/nanoAOD_mc.py"
+if [ -z "$NANOCFG_MC" ]; then
+  export NANOCFG_MC="$SCRIPT_DIRECTORY/nanoAOD_mc.py"
+  echo "Generating the skeleton configuration file for CRAB MC jobs: $NANOCFG_MC"
+  cmsDriver.py $COMMON_COMMANDS --customise_commands="$CUSTOMISE_COMMANDS"         \
+    --mc --eventcontent NANOAODSIM --datatier NANOAODSIM --conditions $AUTOCOND_MC \
+    --python_filename="$NANOCFG_MC"
+else
+  echo "Using the following cfg for the MC jobs: $NANOCFG_MC";
+fi
 
-# for data
-cmsDriver.py nanoAOD -s NANO --data --eventcontent NANOAOD --datatier NANOAOD                \
-  --conditions $AUTOCOND_DATA --era Run2_2017 --no_exec --fileout=tree.root --number=-1      \
-  --python_filename=$NANOCFG_DATA --customise_commands="${CUSTOMISE_COMMANDS/runOnMC/False}" \
-  --lumiToProcess="$JSON_LUMI"
+if [[ ! "$NANOCFG_DATA" =~ ^/ ]]; then
+  export NANOCFG_DATA="$PWD/$NANOCFG_DATA";
+  echo "Full path to the data cfg file: $NANOCFG_DATA";
+fi
 
-# for MC
-cmsDriver.py nanoAOD -s NANO --mc --eventcontent NANOAODSIM --datatier NANOAODSIM     \
-  --conditions $AUTOCOND_MC --era Run2_2017 --no_exec --fileout=tree.root --number=-1 \
-  --python_filename="$NANOCFG_MC" $JETSUBSTRUCTURE_COMMANDS                           \
-  --customise_commands="${CUSTOMISE_COMMANDS/runOnMC/True}"
-
-if [ $ENABLE_JETSUBSTRUCTURE = true ]; then
-  remove_scheduling_lines "$NANOCFG_DATA";
-  remove_scheduling_lines "$NANOCFG_MC";
+if [[ ! "$NANOCFG_MC" =~ ^/ ]]; then
+  export NANOCFG_MC="$PWD/$NANOCFG_MC";
+  echo "Full path to the MC cfg file: $NANOCFG_MC";
 fi
 
 echo "Submitting jobs ..."

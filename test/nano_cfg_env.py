@@ -3,24 +3,24 @@ from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 import re
 import os
 
+def get_env_var(env_var):
+  if env_var not in os.environ:
+    raise ValueError("$%s not defined" % env_var)
+  return os.environ[env_var]
+
 if 'JOB_PREFIX' not in os.environ:
   raise ValueError("$JOB_PREFIX not defined")
 
-PREFIX = os.environ['JOB_PREFIX']
+PREFIX = get_env_var('JOB_PREFIX')
 CURDIR = os.path.dirname(os.path.realpath(__file__))
 
-if 'IS_DATA' not in os.environ:
-  raise ValueError("$IS_DATA not defined")
+NANOCFG_DATA = get_env_var('NANOCFG_DATA')
+NANOCFG_MC   = get_env_var('NANOCFG_MC')
+JSON_LUMI    = get_env_var('JSON_LUMI')
 
-if 'DATASET' not in os.environ:
-  raise ValueError("$DATASET not defined")
-
-if 'DATASET_PATTERN' not in os.environ:
-  raise ValueError("$DATASET_PATTERN not defined")
-
-is_data         = bool(int(os.environ['IS_DATA']))
-dataset_name    = os.environ['DATASET']
-dataset_pattern = os.environ['DATASET_PATTERN']
+is_data         = bool(int(get_env_var('IS_DATA')))
+dataset_name    = get_env_var('DATASET')
+dataset_pattern = get_env_var('DATASET_PATTERN')
 dataset_match   = re.match(dataset_pattern, dataset_name)
 if not dataset_match:
   raise ValueError("Dataset '%s' did not match to pattern '%s'" % (dataset_name, dataset_pattern))
@@ -45,7 +45,7 @@ config.General.transferOutputs = True
 config.General.transferLogs    = True
 
 config.JobType.pluginName = 'Analysis'
-config.JobType.psetName   = os.path.join(CURDIR, 'nanoAOD_%s.py' % ("data" if is_data else "mc"))
+config.JobType.psetName   = NANOCFG_DATA if is_data else NANOCFG_MC
 
 config.Data.inputDataset     = dataset_name
 config.Data.inputDBS         = 'global'
@@ -55,9 +55,9 @@ config.Data.outLFNDirBase    = '/store/user/%s/NanoAOD_2017' % getUsernameFromSi
 config.Data.publication      = False
 config.Data.outputDatasetTag = outputDatasetTag
 
+config.Data.allowNonValidInputDataset = True
+
 if is_data:
-  config.Data.lumiMask = os.path.join(
-    CURDIR, '..', 'data', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt'
-  )
+  config.Data.lumiMask = JSON_LUMI
 
 config.Site.storageSite = 'T2_EE_Estonia'
