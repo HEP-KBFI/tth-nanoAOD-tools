@@ -30,14 +30,14 @@ class jetSubstructureObservablesProducerHTTv2(Module):
     jetsCA15  = Collection(event, self.jetCollectionCA15)
     jetsHTTv2 = Collection(event, self.jetCollectionHTTv2)
 
-    print "<jetSubstructureObservablesProducerHTTv2::analyze>: #%s jets = %i, #%s jets = %i" % (self.jetCollectionHTTv2, len(jetsHTTv2), self.jetCollectionCA15, len(jetsCA15))
+    #print "<jetSubstructureObservablesProducerHTTv2::analyze>: #%s jets = %i, #%s jets = %i" % (self.jetCollectionHTTv2, len(jetsHTTv2), self.jetCollectionCA15, len(jetsCA15))
 
     tau1Val = []
     tau2Val = []
     tau3Val = []
     for jetHTTv2_idx, jetHTTv2 in enumerate(jetsHTTv2):
-        print "%s jet #%i: pT = %1.2f, eta = %1.2f, phi = %1.2f, mass = %1.2f" % \
-          (self.jetCollectionHTTv2, jetHTTv2_idx, jetHTTv2.pt, jetHTTv2.eta, jetHTTv2.phi, jetHTTv2.mass)
+        #print "%s jet #%i: pT = %1.2f, eta = %1.2f, phi = %1.2f, mass = %1.2f" % \
+        #  (self.jetCollectionHTTv2, jetHTTv2_idx, jetHTTv2.pt, jetHTTv2.eta, jetHTTv2.phi, jetHTTv2.mass)
         tau1 = -1.
         tau2 = -1.
         tau3 = -1.
@@ -49,9 +49,9 @@ class jetSubstructureObservablesProducerHTTv2(Module):
                 tau2 = jetCA15.tau2
                 tau3 = jetCA15.tau3
                 dRmin = dR
-                print "matched to %s jet #%i: pT = %1.2f, eta = %1.2f, phi = %1.2f, mass = %1.2f (dR = %1.2f)" % \
-                  (self.jetCollectionCA15, jetCA15_idx, jetCA15.pt, jetCA15.eta, jetCA15.phi, jetCA15.mass, dR)
-        print " setting tau1 = %1.2f, tau2 = %1.2f, tau3 = %1.2f" % (tau1, tau2, tau3)
+                #print "matched to %s jet #%i: pT = %1.2f, eta = %1.2f, phi = %1.2f, mass = %1.2f (dR = %1.2f)" % \
+                #  (self.jetCollectionCA15, jetCA15_idx, jetCA15.pt, jetCA15.eta, jetCA15.phi, jetCA15.mass, dR)
+        #print " setting tau1 = %1.2f, tau2 = %1.2f, tau3 = %1.2f" % (tau1, tau2, tau3)
         tau1Val.append(tau1)
         tau2Val.append(tau2)
         tau3Val.append(tau3)
