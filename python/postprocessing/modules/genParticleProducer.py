@@ -273,11 +273,12 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
             (genTauFromWfromTop_toDecay, genWfromTop, genTopCandidate, ', '.join(map(str, tauFromWfromTopDaughters)))
           )
         genNuTauFromHadronicTauFromTop.extend(nusTauFromTauFromWfromTop)
-    elif all(map(lambda genPart: abs(genPart.pdgId) in [1, 2, 3, 4], genWfromTopDaughters)):
+    elif all(map(lambda genPart: abs(genPart.pdgId) in [1, 2, 3, 4, 5], genWfromTopDaughters)):
       # hadronic case
       if enable_consistency_checks:
         genWfromTopDaughters_pdgIdSorted = list(sorted(genWfromTopDaughters, key = lambda genPart: abs(genPart.pdgId), reverse = True))
-        if not ((genWfromTopDaughters_pdgIdSorted[0].pdgId ==  4 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -3 * sign(genWfromTop.pdgId)) or \
+        if not ((genWfromTopDaughters_pdgIdSorted[0].pdgId == -5 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId ==  4 * sign(genWfromTop.pdgId)) or \
+                (genWfromTopDaughters_pdgIdSorted[0].pdgId ==  4 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -3 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId ==  4 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -1 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId == -3 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId ==  2 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId ==  2 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -1 * sign(genWfromTop.pdgId))):
