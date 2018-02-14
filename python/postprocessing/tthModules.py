@@ -6,6 +6,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIs
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2, btagSF_cmva
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
+from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesProducerHTTv2 import jetSubstructureObservablesHTTv2
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSF
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jecUncertainties import jecUncert_cpp
