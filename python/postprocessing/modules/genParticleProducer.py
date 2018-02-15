@@ -20,10 +20,12 @@ class MassTable:
       genParticleInstance = self.pdgTable.GetParticle(pdgId)
       if not genParticleInstance:
         # source: https://github.com/alberto-sanchez/EvtGen/blob/master/evt.pdl
-        if abs(pdgId) == 4124:    # corresponds to: anti-/Lambda_c(2625)+/-
+        if abs(pdgId) == 4124:     # corresponds to: anti-/Lambda_c(2625)+/-
           return 2.6266000e+00
-        elif abs(pdgId) == 14122: # corresponds to: anti-/Lambda_c(2593)+/-
+        elif abs(pdgId) == 14122:  # corresponds to: anti-/Lambda_c(2593)+/-
           return 2.5922500e+00
+        elif abs(pdgId) == 200553: # corresponds to: Upsilon(3S)
+          return 1.0355200e+01
         else:
           raise ValueError("Invalid pdgId: %i" % pdgId)
       return genParticleInstance.Mass()
