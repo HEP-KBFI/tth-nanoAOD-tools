@@ -4,6 +4,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 import math
+import logging
 
 
 sign = lambda x: int(math.copysign(1, x) if x != 0 else 0)
@@ -19,26 +20,21 @@ class MassTable:
     else:
       genParticleInstance = self.pdgTable.GetParticle(pdgId)
       if not genParticleInstance:
-        # source: https://github.com/alberto-sanchez/EvtGen/blob/master/evt.pdl
-        if abs(pdgId) == 4124:     # corresponds to: anti-/Lambda_c(2625)+/-
-          return 2.6266000e+00
-        elif abs(pdgId) == 14122:  # corresponds to: anti-/Lambda_c(2593)+/-
-          return 2.5922500e+00
-        elif abs(pdgId) == 200553: # corresponds to: Upsilon(3S)
-          return 1.0355200e+01
-        else:
-          raise ValueError("Invalid pdgId: %i" % pdgId)
+        # Since most of the common low-mass particles are defined in ROOT's PDG table,
+        # and that it's more than likely we don't need such generator-level information,
+        # we can safely set the masses of such particles to 0 GeV
+        logging.debug("Setting the mass to 0 GeV for a particle with PDG id of %d" % pdgId)
+        return 0.
       return genParticleInstance.Mass()
 
   def getCharge(self, pdgId):
     genParticleInstance = self.pdgTable.GetParticle(pdgId)
     if not genParticleInstance:
-      if abs(pdgId) == 4124:
-        return sign(pdgId)
-      elif abs(pdgId) == 14122:
-        return sign(14122)
-      else:
-        raise ValueError("Invalid pdgId: %i" % pdgId)
+      # It's more than likely that we don't need to know the charges of generator-level particles
+      # that are not defined in ROOT's PDG id table. Therefore, we assign neutral charges to
+      # these particles.
+      logging.debug("Setting the charge to neutral for a particle with PDG id of %d" % pdgId)
+      return 0
     return sign(genParticleInstance.Charge())
 
 
@@ -430,7 +426,7 @@ def genTauSelection(genParticles, choice, enable_consistency_checks = False):
 
 class genParticleProducer(Module):
 
-  def __init__(self, genEntry):
+  def __init__(self, genEntry, verbose = False):
     self.massTable = MassTable()
     self.branchLenNames  = {}
     self.selections      = {}
@@ -450,6 +446,9 @@ class genParticleProducer(Module):
       self.branchBaseNames.append(branchBaseName)
       self.selections[branchBaseName]     = selection
       self.branchLenNames[branchBaseName] = "n%s" % branchBaseName
+
+    if verbose:
+      logging.getLogger().setLevel(logging.DEBUG)
 
   def beginJob(self):
     pass
