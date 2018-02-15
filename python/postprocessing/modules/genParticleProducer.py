@@ -19,10 +19,11 @@ class MassTable:
     else:
       genParticleInstance = self.pdgTable.GetParticle(pdgId)
       if not genParticleInstance:
-        # corresponds to: anti-/Lambda_c(2625)+/-
         # source: https://github.com/alberto-sanchez/EvtGen/blob/master/evt.pdl
-        if abs(pdgId) == 4124:
+        if abs(pdgId) == 4124:    # corresponds to: anti-/Lambda_c(2625)+/-
           return 2.6266000e+00
+        elif abs(pdgId) == 14122: # corresponds to: anti-/Lambda_c(2593)+/-
+          return 2.5922500e+00
         else:
           raise ValueError("Invalid pdgId: %i" % pdgId)
       return genParticleInstance.Mass()
@@ -32,6 +33,8 @@ class MassTable:
     if not genParticleInstance:
       if abs(pdgId) == 4124:
         return sign(pdgId)
+      elif abs(pdgId) == 14122:
+        return sign(14122)
       else:
         raise ValueError("Invalid pdgId: %i" % pdgId)
     return sign(genParticleInstance.Charge())
@@ -278,6 +281,7 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
       if enable_consistency_checks:
         genWfromTopDaughters_pdgIdSorted = list(sorted(genWfromTopDaughters, key = lambda genPart: abs(genPart.pdgId), reverse = True))
         if not ((genWfromTopDaughters_pdgIdSorted[0].pdgId == -5 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId ==  4 * sign(genWfromTop.pdgId)) or \
+                (genWfromTopDaughters_pdgIdSorted[0].pdgId == -5 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId ==  2 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId ==  4 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -3 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId ==  4 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId == -1 * sign(genWfromTop.pdgId)) or \
                 (genWfromTopDaughters_pdgIdSorted[0].pdgId == -3 * sign(genWfromTop.pdgId) and genWfromTopDaughters_pdgIdSorted[1].pdgId ==  2 * sign(genWfromTop.pdgId)) or \
@@ -288,7 +292,7 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
       genQuarkFromWfromTop.extend(genWfromTopDaughters)
     else:
       raise ValueError("Invalid W (%s) daughters from top (%s) decay: %s" % \
-        (genTopCandidate, genWfromTop, ', '.join(map(str, genWfromTopDaughters)))
+        (genWfromTop, genTopCandidate, ', '.join(map(str, genWfromTopDaughters)))
       )
 
   if choice == SelectionOptions.SAVE_BQUARK_FROM_TOP:
