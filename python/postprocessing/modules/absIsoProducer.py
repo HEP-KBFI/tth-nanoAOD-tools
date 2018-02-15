@@ -42,7 +42,8 @@ class absIsoProducer(Module):
     for lepBr in [self.elBr_base, self.muBr_base]:
       for relBrNeu in self.relBranches_neu:
         allBrNames = get_allIsoBranchNames(relBrNeu)
-        for brName in allBrNames:
+        relBrAll, relBrChg, relBrNeu, absBrAll, absBrChg, absBrNeu = allBrNames
+        for brName in [relBrNeu, absBrAll, absBrChg, absBrNeu]:
           self.out.branch("%s_%s" % (lepBr, brName), "F", lenVar = "n%s" % lepBr)
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
@@ -68,7 +69,7 @@ class absIsoProducer(Module):
         absChgs = [relChg * ptCorr for relChg, ptCorr in zip(relChgs, ptCorrs)]
         absNeus = [relNeu * ptCorr for relNeu, ptCorr in zip(relNeus, ptCorrs)]
 
-        for brName, isoArr in zip(allBrNames, [relAlls, relChgs, relNeus, absAlls, absChgs, absNeus]):
+        for brName, isoArr in zip([relBrNeu, absBrAll, absBrChg, absBrNeu], [relNeus, absAlls, absChgs, absNeus]):
           self.out.fillBranch("%s_%s" % (lepBr_base, brName), isoArr)
 
     return True
