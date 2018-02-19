@@ -8,14 +8,14 @@ from PhysicsTools.NanoAOD.nano_cff import nanoAOD_customizeMC, nanoAOD_customize
 
 from tthAnalysis.NanoAOD.addJetSubstructureObservables import addJetSubstructureObservables
 
-import os.path
+import os
 
 isDEBUG         = False
 isMC            = True
 global_tag_data = '94X_dataRun2_ReReco_EOY17_v2'
 global_tag_mc   = '94X_mc2017_realistic_v10'
 JSONfile = os.path.join(
-  os.path.dirname(os.path.realpath(__file__)), '..', 'data', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt'
+  os.environ['CMSSW_BASE'], 'src', 'tthAnalysis', 'NanoAODTools', 'data', 'Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON.txt'
 )
 
 process = cms.Process('NANO', eras.Run2_2017)
