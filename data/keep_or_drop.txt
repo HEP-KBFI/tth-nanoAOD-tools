@@ -13,3 +13,5 @@ drop HLT_FullTrack*
 drop HLT_Random*
 drop HLT_ZeroBias*
 drop HLT_Rsq*
+drop TrigObj_*
+drop nTrigObj
