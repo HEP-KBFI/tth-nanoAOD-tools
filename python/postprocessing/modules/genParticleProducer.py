@@ -15,7 +15,7 @@ class MassTable:
     self.pdgTable = ROOT.TDatabasePDG()
 
   def getMass(self, mass, pdgId):
-    if mass > 10. or (pdgId == 22 and mass > 1.):
+    if mass > 10. or (pdgId == 22 and mass > 1.) or abs(pdgId) == 24 or pdgId == 23:
       return mass
     else:
       genParticleInstance = self.pdgTable.GetParticle(pdgId)
