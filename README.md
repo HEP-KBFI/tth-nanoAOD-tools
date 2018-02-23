@@ -13,7 +13,7 @@ cmsenv
 
 # clone necessary repositories
 git cms-merge-topic cms-nanoAOD:master
-git clone https://github.com/cms-nanoAOD/nanoAOD-tools.git  $CMSSW_BASE/src/PhysicsTools/NanoAODTools
+git clone https://github.com/HEP-KBFI/nanoAOD-tools.git     $CMSSW_BASE/src/PhysicsTools/NanoAODTools
 git clone https://github.com/HEP-KBFI/tth-nanoAOD-tools.git $CMSSW_BASE/src/tthAnalysis/NanoAODTools
 
 # compile the thing
