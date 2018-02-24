@@ -38,7 +38,7 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 
 # decide which modules you need to run
 NANO_MODULES_DATA="lepJetVarBTagAll,absIso,jecUncert_cpp,tauIDLog,jetSubstructureObservablesHTTv2"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2,btagSF_cmva,puWeight,jetmetUncertainties"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2,btagSF_deep,puWeight,jetmetUncertainties"
 NANO_MODULES=NANO_MODULES_MC
 
 nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
