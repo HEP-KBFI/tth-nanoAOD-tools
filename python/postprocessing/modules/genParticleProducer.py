@@ -10,6 +10,61 @@ import logging
 sign = lambda x: int(math.copysign(1, x) if x != 0 else 0)
 
 
+statusFlagsMap = {
+  # comments taken from:
+  # DataFormats/HepMCCandidate/interface/GenParticle.h
+  # PhysicsTools/HepMCCandAlgos/interface/MCTruthHelper.h
+  #
+  # nomenclature taken from:
+  # PhysicsTools/NanoAOD/python/genparticles_cff.py
+  #
+  #TODO: use this map in other gen-lvl particle selectors as well
+  # GenLepFromTauFromTop -> isDirectPromptTauDecayProduct &&
+  #                         isDirectHardProcessTauDecayProduct &&
+  #                         isLastCopy &&
+  #                         ! isDirectHadronDecayProduct
+  # GenLepFromTau -> isDirectTauDecayProduct (or isDirectPromptTauDecayProduct?) &&
+  #                  isLastCopy &&
+  #                  ! isDirectHadronDecayProduct
+  #                  (&& maybe isHardProcessTauDecayProduct?)
+  #
+  # GenLepFromTop -> isPrompt &&
+  #                  isHardProcess &&
+  #                  (isLastCopy || isLastCopyBeforeFSR) &&
+  #                  ! isDirectHadronDecayProduct
+  #
+  # Not sure if to choose (isLastCopy or isLastCopyBeforeFSR) or just isFirstCopy:
+  # GenWZQuark, GenHiggsDaughters, GenVbosons
+  #
+  # Have no clue what exactly to require from GenTau
+  #
+  #
+  'isPrompt'                           : 0,  # any decay product NOT coming from hadron, muon or tau decay
+  'isDecayedLeptonHadron'              : 1,  # a particle coming from hadron, muon, or tau decay
+                                             # (does not include resonance decays like W,Z,Higgs,top,etc)
+                                             # equivalent to status 2 in the current HepMC standard
+  'isTauDecayProduct'                  : 2,  # a direct or indirect tau decay product
+  'isPromptTauDecayProduct'            : 3,  # a direct or indirect decay product of a prompt tau
+  'isDirectTauDecayProduct'            : 4,  # a direct tau decay product
+  'isDirectPromptTauDecayProduct'      : 5,  # a direct decay product from a prompt tau
+  'isDirectHadronDecayProduct'         : 6,  # a direct decay product from a hadron
+  'isHardProcess'                      : 7,  # part of the hard process
+  'fromHardProcess'                    : 8,  # the direct descendant of a hard process particle of the same pdg id
+  'isHardProcessTauDecayProduct'       : 9,  # a direct or indirect decay product of a tau from the hard process
+  'isDirectHardProcessTauDecayProduct' : 10, # a direct decay product of a tau from the hard process
+  'fromHardProcessBeforeFSR'           : 11, # the direct descendant of a hard process particle of the same pdg id
+                                             # for outgoing particles the kinematics are those before QCD or QED FSR
+  'isFirstCopy'                        : 12, # the first copy of the particle in the chain with the same pdg id
+  'isLastCopy'                         : 13, # the last copy of the particle in the chain with the same pdg id
+                                             # (and therefore is more likely, but not guaranteed,
+                                             # to carry the final physical momentum)
+  'isLastCopyBeforeFSR'                : 14, # the last copy of the particle in the chain with the same pdg id
+                                             # before QED or QCD FSR (and therefore is more likely,
+                                             # but not guaranteed, to carry the momentum after ISR;
+                                             # only really makes sense for outgoing particles
+}
+
+
 class MassTable:
   def __init__(self):
     self.pdgTable = ROOT.TDatabasePDG()
@@ -47,15 +102,22 @@ class GenPartAux:
     self.pdgId            = genPart.pdgId
     self.charge           = massTable.getCharge(genPart.pdgId)
     self.status           = genPart.status
+    self.statusFlags      = genPart.statusFlags
     self.genPartIdxMother = genPart.genPartIdxMother
     self.idx              = idx
 
   def __str__(self):
-    return "pt = %.3f eta = %.3f phi = %.3f mass = %.3f pdgId = %i charge = %i status = %i mom = %i idx = %i" % \
-      (self.pt, self.eta, self.phi, self.mass, self.pdgId, self.charge, self.status, self.genPartIdxMother, self.idx)
+    return "pt = %.3f eta = %.3f phi = %.3f mass = %.3f pdgId = %i charge = %i status = %i " \
+           "statusFlags = %i mom = %i idx = %i" % \
+      (self.pt, self.eta, self.phi, self.mass, self.pdgId, self.charge, self.status, \
+       self.statusFlags, self.genPartIdxMother, self.idx)
 
   def __repr__(self):
     return self.__str__()
+
+  def chechIf(self, condition):
+    assert(condition in statusFlagsMap)
+    return (self.statusFlags & (1 << statusFlagsMap[condition]) != 0)
 
 
 class SelectionOptions:
@@ -83,6 +145,18 @@ class SelectionOptions:
 
 def genLeptonSelection(genParticles):
   return filter(lambda genPart: abs(genPart.pdgId) in [11, 13] and genPart.status == 1, genParticles)
+
+def genPromptLeptonSelection(genParticles):
+  return filter(
+    lambda genLepton:
+      genLepton.chechIf('isLastCopy') and
+      not genLepton.chechIf('isDirectHadronDecayProduct') and
+      (
+        genLepton.chechIf('isPrompt') or
+        genLepton.chechIf('isDirectPromptTauDecayProduct')
+      ),
+    genLeptonSelection(genParticles)
+  )
 
 def genHiggsSelection(genParticles):
   return filter(
@@ -433,13 +507,14 @@ class genParticleProducer(Module):
     self.branchBaseNames = []
 
     self.genBranches = {
-        "pt"     : "F",
-        "eta"    : "F",
-        "phi"    : "F",
-        "mass"   : "F",
-        "pdgId"  : "I",
-        "charge" : "I",
-        "status" : "I",
+        "pt"          : "F",
+        "eta"         : "F",
+        "phi"         : "F",
+        "mass"        : "F",
+        "pdgId"       : "I",
+        "charge"      : "I",
+        "status"      : "I",
+        "statusFlags" : "I",
       }
 
     for branchBaseName, selection in genEntry.items():
@@ -483,7 +558,8 @@ class genParticleProducer(Module):
     return True
 
 
-genLeptonEntry                      = ("GenLep",                         genLeptonSelection)
+genLeptonEntry                      = ("GenLep",                         genPromptLeptonSelection)
+genLeptonAllEntry                   = ("GenLepAll",                      genLeptonSelection)
 genHiggsEntry                       = ("GenHiggs",                       genHiggsSelection)
 genHiggsDaughtersEntry              = ("GenHiggsDaughters",              genHiggsDaughtersSelection)
 genNuEntry                          = ("GenNu",                          genNuSelection)
@@ -509,7 +585,8 @@ genQuarkFromTopEntry                = ("GenQuarkFromTop",                (lambda
 genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_BQUARK_FROM_TOP)))
 
 # provide these variables as the 2nd arguments to the import option for the nano_postproc.py script
-genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all leptons
+genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all prompt stable leptons
+genLeptonAll                   = lambda : genParticleProducer(dict([genLeptonAllEntry]))                   # all stable leptons
 genHiggs                       = lambda : genParticleProducer(dict([genHiggsEntry]))                       # all Higgs (first in the decay chain)
 genHiggsDaughters              = lambda : genParticleProducer(dict([genHiggsDaughtersEntry]))              # all Higgs daughters
 genTau                         = lambda : genParticleProducer(dict([genTauEntry]))                         # all taus
@@ -536,6 +613,7 @@ genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFro
 
 genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
+    genLeptonAllEntry,
     genHiggsEntry,
     genHiggsDaughtersEntry,
     genNuEntry,
