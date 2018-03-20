@@ -80,6 +80,7 @@ class lepJetVarProducer(Module):
         self.nLepton_branchNames = { leptonBranchName : "n%s" % leptonBranchName for leptonBranchName in self.leptonBranchNames }
         self.jetPtRatio_branchNames = { leptonBranchName : "%s_jetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
         self.jetPtRelv2_branchNames = { leptonBranchName : "%s_jetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetBtagCSVV2_cut_branchNames = { leptonBranchName : '%s_btagCSVV2_cut' % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
 
         self.jetBtagDiscr_branchNames = { leptonBranchName : {
             btagAlgo : "%s_jetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
@@ -113,6 +114,7 @@ class lepJetVarProducer(Module):
         for leptonBranchName in self.leptonBranchNames:
             self.out.branch(self.jetPtRatio_branchNames[leptonBranchName], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
             self.out.branch(self.jetPtRelv2_branchNames[leptonBranchName], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
+            self.out.branch(self.jetBtagCSVV2_cut_branchNames[leptonBranchName], "I", lenVar = self.nLepton_branchNames[leptonBranchName])
 
             for btagAlgo in self.jetBtagDiscr_branchNames[leptonBranchName]:
               self.out.branch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], "F", lenVar = self.nLepton_branchNames[leptonBranchName])
@@ -169,6 +171,7 @@ class lepJetVarProducer(Module):
             leptons_jetPtRatio = []
             leptons_jetPtRelv2 = []
             leptons_jetBtagDiscr = { btagAlgo : [] for btagAlgo in self.btagAlgos }
+            leptons_jetBtagCSVV2_cut = []
 
             pairs = matchObjectCollection(leptons, jets)
             for lepton in leptons:
@@ -176,17 +179,26 @@ class lepJetVarProducer(Module):
                 if jet is None:
                     leptons_jetPtRatio.append(-1.)
                     leptons_jetPtRelv2.append(-1.)
+                    leptons_jetBtagCSVV2_cut.append(0)
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(-1.)
                 else:
                     leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho, leptonBranchName == self.electronBranchName))
                     leptons_jetPtRelv2.append(self.getPtRelv2(lepton, jet, rho, leptonBranchName == self.electronBranchName))
+                    leptons_jet_btagCSVV2_value = getattr(jet, self.btagAlgoMap['csvv2'])
+                    if leptons_jet_btagCSVV2_value < 0.3: # optimized WP from 2016 analysis
+                        leptons_jetBtagCSVV2_cut.append(1)
+                    elif 0.3 <= leptons_jet_btagCSVV2_value < 0.8484: # old medium WP
+                        leptons_jetBtagCSVV2_cut.append(2)
+                    else:
+                        leptons_jetBtagCSVV2_cut.append(3)
 
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(getattr(jet, self.btagAlgoMap[btagAlgo]))
 
-            self.out.fillBranch(self.jetPtRatio_branchNames[leptonBranchName], leptons_jetPtRatio)
-            self.out.fillBranch(self.jetPtRelv2_branchNames[leptonBranchName], leptons_jetPtRelv2)
+            self.out.fillBranch(self.jetPtRatio_branchNames[leptonBranchName],       leptons_jetPtRatio)
+            self.out.fillBranch(self.jetPtRelv2_branchNames[leptonBranchName],       leptons_jetPtRelv2)
+            self.out.fillBranch(self.jetBtagCSVV2_cut_branchNames[leptonBranchName], leptons_jetBtagCSVV2_cut)
 
             for btagAlgo in self.btagAlgos:
               self.out.fillBranch(self.jetBtagDiscr_branchNames[leptonBranchName][btagAlgo], leptons_jetBtagDiscr[btagAlgo])
