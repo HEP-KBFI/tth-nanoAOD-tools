@@ -80,7 +80,7 @@ class lepJetVarProducer(Module):
         self.nLepton_branchNames = { leptonBranchName : "n%s" % leptonBranchName for leptonBranchName in self.leptonBranchNames }
         self.jetPtRatio_branchNames = { leptonBranchName : "%s_jetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
         self.jetPtRelv2_branchNames = { leptonBranchName : "%s_jetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
-        self.jetBtagCSVV2_cut_branchNames = { leptonBranchName : '%s_btagCSVV2_cut' % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetBtagCSVV2_cut_branchNames = { leptonBranchName : '%s_jetBtag_csvv2_cut' % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
 
         self.jetBtagDiscr_branchNames = { leptonBranchName : {
             btagAlgo : "%s_jetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
