@@ -89,7 +89,7 @@ class lepJetVarProducer(Module):
         # define txt file with L1 jet energy corrections
         # (downloaded from https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC )
         self.l1corrInputFilePath = os.environ['CMSSW_BASE'] + "/src/tthAnalysis/NanoAODTools/data/"
-        self.l1corrInputFileName = "Fall17_17Nov2017_V4_MC_L1FastJet_AK4PFchs.txt"
+        self.l1corrInputFileName = "Fall17_17Nov2017_V8_MC_L1FastJet_AK4PFchs.txt"
 
         # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
