@@ -57,9 +57,7 @@ If you want to add more modules then you must add the relevant import statements
 
 ## TODO
 
-1. ECAL variables (eleDEta, eleDPhi) missing (but it might be the case that they'll be replaced with a single bit flag indicating whether a given lepton passes the ECAL cuts or not);
-1. Fallback tau ID variables idCI3hit and isoCI3hit (and their respective raw values) missing
-1. tH event weights lheWeightSM missing
+1. tH event weights lheWeightSM missing (but we dont have any 94X tH samples)
 
 The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-KBFI/tth-htt/tree/nanoAOD) need to be renamed where necessary, or recomputed (such as JECDown, JECUp, miniIsoCharged and miniIsoNeutral; we don't do this computation here as we would need to loop over the events again because it is not possible to read the variables that are created within the event loop).
 
@@ -67,3 +65,5 @@ The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-K
 
 1. Official tool for post-processing the nanoAOD Ntuples: https://github.com/cms-nanoAOD/nanoAOD-tools
 1. nanoAOD fork of CMSSW (complementary): https://github.com/cms-nanoAOD/cmssw/tree/master/PhysicsTools/NanoAOD
+1. Our own nanoAOD-tools fork: https://github.com/HEP-KBFI/nanoAOD-tools
+1. Our own fork of the CMSSW FW, based off the official nanoAOD fork: https://github.com/HEP-KBFI/cmssw
