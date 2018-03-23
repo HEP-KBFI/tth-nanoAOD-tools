@@ -146,7 +146,7 @@ class lepJetVarProducer(Module):
     def getPtRatio(self, lepton, jet, rho, isElectron):
         p4j_lepAware = self.jetLepAwareJEC(lepton, jet, rho, isElectron)
         lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
-        return min(lepton_pt_uncorr / max(1., p4j_lepAware.Pt()), 1.5)
+        return min(lepton_pt_uncorr / p4j_lepAware.Pt(), 1.5)
 
     def getPtRelv2(self, lepton, jet, rho, isElectron):
         lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
@@ -174,7 +174,7 @@ class lepJetVarProducer(Module):
             for lepton in leptons:
                 jet = pairs[lepton]
                 if jet is None:
-                    leptons_jetPtRatio.append(-1.)
+                    leptons_jetPtRatio.append(1. / (1. + lepton.pfRelIso04_all))
                     leptons_jetPtRelv2.append(-1.)
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(-1.)
