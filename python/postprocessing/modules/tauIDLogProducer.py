@@ -15,11 +15,6 @@ def logId(id_):
     return int(math.log(id_ + 1, 2))
   return id_
 
-'''
-Tau_idDecayMode
-Tau_idDecayModeNewDMs
-'''
-
 class tauIDLogProducer(Module):
 
   def __init__(self):
