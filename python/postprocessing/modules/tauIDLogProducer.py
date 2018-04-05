@@ -15,6 +15,11 @@ def logId(id_):
     return int(math.log(id_ + 1, 2))
   return id_
 
+'''
+Tau_idDecayMode
+Tau_idDecayModeNewDMs
+'''
+
 class tauIDLogProducer(Module):
 
   def __init__(self):
@@ -22,7 +27,10 @@ class tauIDLogProducer(Module):
     self.tauBr_n    = "n%s" % self.tauBr_base
     self.tauBr_ids  = {
       tauBr_id : '%s_%s_log' % (self.tauBr_base, tauBr_id) \
-      for tauBr_id in ['idAntiMu', 'idAntiEle', 'idMVAnewDM', 'idMVAoldDM', 'idMVAoldDMdR03']
+      for tauBr_id in [
+        'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
+        'idMVAoldDM2017v1', 'idMVAoldDM2017v2'
+      ]
     }
 
   def beginJob(self):
