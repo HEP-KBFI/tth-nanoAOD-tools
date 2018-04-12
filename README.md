@@ -36,8 +36,11 @@ The output file name is created by appending a suffix to the basename of the inp
 export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
 mkdir -p $NANOAOD_OUTPUT_DIR
 
+# choose an era between 2016 and 2017
+ERA=2017
+
 # decide which modules you need to run
-NANO_MODULES_DATA="lepJetVarBTagAll,absIso,tauIDLog,jetSubstructureObservablesHTTv2"
+NANO_MODULES_DATA="lepJetVarBTagAll,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2"
 NANO_MODULES_MC="$NANO_MODULES_DATA,trigObjMatcher,genHiggsDecayMode,genAll,btagSF_csvv2,btagSF_deep,puWeight,jetmetUncertainties"
 NANO_MODULES=NANO_MODULES_MC
 

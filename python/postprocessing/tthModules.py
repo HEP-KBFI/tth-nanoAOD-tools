@@ -1,7 +1,7 @@
 from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import genAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVarBTagAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
-from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
+from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog_2016, tauIDLog_2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_csvv2, btagSF_deep
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
