@@ -19,11 +19,6 @@ class trigObjMatcherProducer(Module):
     self.isTrigObjEleMatchedBranchName = '%s_%s' % (self.eleBranchName, self.isTrigObjMatchedBranchName)
     self.isTrigObjTauMatchedBranchName = '%s_%s' % (self.tauBranchName, self.isTrigObjMatchedBranchName)
 
-    self.muEleBits  = [ 4, 32, 64 ]
-    self.muTauBits  = [ 8 ]
-    self.eleMuBits  = [ 8, 64, 128 ]
-    self.eleTauBits = [ 16 ]
-
   def beginJob(self):
     pass
 
@@ -39,7 +34,7 @@ class trigObjMatcherProducer(Module):
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     pass
 
-  def is_dR_matched(self, obj1, obj2, maxDr = 1e-2):
+  def is_dR_matched(self, obj1, obj2, maxDr = 5e-2):
     return math.sqrt((obj1.eta - obj2.eta)**2 + (obj1.phi - obj2.phi)**2) < maxDr
 
   def analyze(self, event):
@@ -56,37 +51,18 @@ class trigObjMatcherProducer(Module):
       trigObjID         = trigObj.id
       trigObjFilterBits = trigObj.filterBits
 
-      check_mus  = False
-      check_eles = False
-      check_taus = False
-
       if trigObjID == 13:
-        check_mus = True
-        if any(list(map(lambda bit: bool(trigObjFilterBits & bit), self.muEleBits))):
-          check_eles = True
-        if any(list(map(lambda bit: bool(trigObjFilterBits & bit), self.muTauBits))):
-          check_taus = True
-      elif trigObjID == 11:
-        check_eles = True
-        if any(list(map(lambda bit: bool(trigObjFilterBits & bit), self.eleMuBits))):
-          check_mus = True
-        if any(list(map(lambda bit: bool(trigObjFilterBits & bit), self.eleTauBits))):
-          check_taus = True
-      elif trigObjID == 15:
-        check_taus = True
-
-      if check_mus:
         for idx, mu in enumerate(mus):
           if self.is_dR_matched(trigObj, mu):
             mus_isMatched[idx] |= trigObjFilterBits
 
-      if check_eles:
+      elif trigObjID == 11:
         for idx, ele in enumerate(eles):
           if self.is_dR_matched(trigObj, ele):
             if not eles_isMatched[idx]:
               eles_isMatched[idx] |= trigObjFilterBits
 
-      if check_taus:
+      elif trigObjID == 15:
         for idx, tau in enumerate(taus):
           if self.is_dR_matched(trigObj, tau):
             taus_isMatched[idx] |= trigObjFilterBits
