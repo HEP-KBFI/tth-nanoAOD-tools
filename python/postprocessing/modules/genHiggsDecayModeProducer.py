@@ -27,7 +27,7 @@ class genHiggsDecayModeProducer(Module):
 
     genHiggsDecayModeVal = 0
     nofHiggs = len(list(filter(lambda genParticle: genParticle.pdgId == 25, genParticles)))
-    if nofHiggs > 0:
+    if nofHiggs == 1:
       h0_daus = list(filter(
         lambda genParticle: genParticle.genPartIdxMother >= 0 and \
                             genParticles[genParticle.genPartIdxMother].pdgId == 25 and \
