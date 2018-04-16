@@ -17,7 +17,7 @@ class genHiggsDecayModeProducer(Module):
 
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
-    self.out.branch(self.genHiggsDecayModeName, "F")
+    self.out.branch(self.genHiggsDecayModeName, "I")
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     pass
