@@ -41,7 +41,12 @@ ERA=2017
 
 # decide which modules you need to run
 NANO_MODULES_DATA="lepJetVarBTagAll,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2,btagSF_deep,puWeight_$ERA,jetmetUncertainties$ERA"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2_$ERA,puWeight_$ERA,jetmetUncertainties$ERA"
+if [ "$ERA" = "2016" ]; then
+  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
+elif [ "$ERA" == "2017" ]; then
+  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_deep_$ERA";
+fi
 NANO_MODULES=NANO_MODULES_MC
 
 nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
