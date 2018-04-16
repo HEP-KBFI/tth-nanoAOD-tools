@@ -53,7 +53,7 @@ nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NA
   $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
 
 # remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
-nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll \
+nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll_$ERA \
   -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt                           \
   $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_i.root
 

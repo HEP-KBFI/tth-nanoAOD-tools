@@ -7,12 +7,18 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class countHistogramProducer(Module):
 
-  def __init__(self, selection):
+  def __init__(self, era, selection):
+    self.era                = era
     self.puWeightName       = 'puWeight'
     self.genWeightName      = 'genWeight'
     self.LHEPdfWeightName   = 'LHEPdfWeight'
     self.LHEScaleWeightName = 'LHEScaleWeight'
-    self.nLHEPdfWeight      = 33
+    if self.era == '2016':
+      self.nLHEPdfWeight = 101
+    elif self.era == '2017':
+      self.nLHEPdfWeight = 33
+    else:
+      raise ValueError('Invalid era: %s' % self.era)
     self.nLHEScaleWeight    = 9
 
     self.histograms = {
@@ -120,11 +126,20 @@ all_histograms = [
 ]
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll                         = lambda : countHistogramProducer(all_histograms)
-countHistogramCount                       = lambda : countHistogramProducer('Count')
-countHistogramCountWeighted               = lambda : countHistogramProducer('CountWeighted')
-countHistogramCountFullWeighted           = lambda : countHistogramProducer('CountFullWeighted')
-countHistogramCountPosWeight              = lambda : countHistogramProducer('CountPosWeight')
-countHistogramCountNegWeight              = lambda : countHistogramProducer('CountNegWeight')
-countHistogramCountWeightedLHEWeightPdf   = lambda : countHistogramProducer('CountWeightedLHEWeightPdf')
-countHistogramCountWeightedLHEWeightScale = lambda : countHistogramProducer('CountWeightedLHEWeightScale')
+countHistogramAll_2016                         = lambda : countHistogramProducer(all_histograms)
+countHistogramCount_2016                       = lambda : countHistogramProducer('2016', 'Count')
+countHistogramCountWeighted_2016               = lambda : countHistogramProducer('2016', 'CountWeighted')
+countHistogramCountFullWeighted_2016           = lambda : countHistogramProducer('2016', 'CountFullWeighted')
+countHistogramCountPosWeight_2016              = lambda : countHistogramProducer('2016', 'CountPosWeight')
+countHistogramCountNegWeight_2016              = lambda : countHistogramProducer('2016', 'CountNegWeight')
+countHistogramCountWeightedLHEWeightPdf_2016   = lambda : countHistogramProducer('2016', 'CountWeightedLHEWeightPdf')
+countHistogramCountWeightedLHEWeightScale_2016 = lambda : countHistogramProducer('2016', 'CountWeightedLHEWeightScale')
+
+countHistogramAll_2017                         = lambda : countHistogramProducer(all_histograms)
+countHistogramCount_2017                       = lambda : countHistogramProducer('2017', 'Count')
+countHistogramCountWeighted_2017               = lambda : countHistogramProducer('2017', 'CountWeighted')
+countHistogramCountFullWeighted_2017           = lambda : countHistogramProducer('2017', 'CountFullWeighted')
+countHistogramCountPosWeight_2017              = lambda : countHistogramProducer('2017', 'CountPosWeight')
+countHistogramCountNegWeight_2017              = lambda : countHistogramProducer('2017', 'CountNegWeight')
+countHistogramCountWeightedLHEWeightPdf_2017   = lambda : countHistogramProducer('2017', 'CountWeightedLHEWeightPdf')
+countHistogramCountWeightedLHEWeightScale_2017 = lambda : countHistogramProducer('2017', 'CountWeightedLHEWeightScale')
