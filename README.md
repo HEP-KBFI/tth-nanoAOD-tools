@@ -40,8 +40,8 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 ERA=2017
 
 # decide which modules you need to run
-NANO_MODULES_DATA="lepJetVarBTagAll,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,btagSF_csvv2_$ERA,puWeight_$ERA,jetmetUncertainties$ERA"
+NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA,jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
 if [ "$ERA" = "2016" ]; then
   NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
 elif [ "$ERA" == "2017" ]; then

@@ -57,7 +57,7 @@ def matchObjectCollection(ptcs, matchCollection, deltaRMax = 0.4, filter = lambd
 
 class lepJetVarProducer(Module):
 
-    def __init__(self, btagAlgos):
+    def __init__(self, era, btagAlgos):
         # define lepton and jet branches and branch used to access energy densitity rho
         # (the latter is needed to compute L1 jet energy corrections)
         self.electronBranchName = "Electron"
@@ -88,7 +88,12 @@ class lepJetVarProducer(Module):
         # define txt file with L1 jet energy corrections
         # (downloaded from https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC )
         self.l1corrInputFilePath = os.environ['CMSSW_BASE'] + "/src/tthAnalysis/NanoAODTools/data/"
-        self.l1corrInputFileName = "Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt"
+        if era == '2016':
+            self.l1corrInputFileName = "Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt"
+        elif era == '2017':
+          self.l1corrInputFileName = "Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt"
+        else:
+          raise ValueError("Invalid era: %s" % era)
 
         # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
@@ -194,8 +199,12 @@ class lepJetVarProducer(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
+lepJetVarBTagAll_2016   = lambda : lepJetVarProducer('2016', ["csvv2", "deep", "cmva"])
+lepJetVarBTagCSVv2_2016 = lambda : lepJetVarProducer('2016', ["csvv2"])
+lepJetVarBTagDeep_2016  = lambda : lepJetVarProducer('2016', ["deep"])
+lepJetVarBTagCMVA_2016  = lambda : lepJetVarProducer('2016', ["cmva"])
 
-lepJetVarBTagAll   = lambda : lepJetVarProducer(["csvv2", "deep", "cmva"])
-lepJetVarBTagCSVv2 = lambda : lepJetVarProducer(["csvv2"])
-lepJetVarBTagDeep  = lambda : lepJetVarProducer(["deep"])
-lepJetVarBTagCMVA  = lambda : lepJetVarProducer(["cmva"])
+lepJetVarBTagAll_2017   = lambda : lepJetVarProducer('2017', ["csvv2", "deep", "cmva"])
+lepJetVarBTagCSVv2_2017 = lambda : lepJetVarProducer('2017', ["csvv2"])
+lepJetVarBTagDeep_2017  = lambda : lepJetVarProducer('2017', ["deep"])
+lepJetVarBTagCMVA_2017  = lambda : lepJetVarProducer('2017', ["cmva"])
