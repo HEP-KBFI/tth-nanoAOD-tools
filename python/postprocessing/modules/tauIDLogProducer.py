@@ -22,7 +22,7 @@ class tauIDLogProducer(Module):
     self.tauBr_n    = "n%s" % self.tauBr_base
     self.tauBrs_dict = {
       '2016' : [
-        'idAntiMu', 'idAntiEle', 'idMVAnewDM', 'idMVAoldDM', 'idMVAoldDMdR03',
+        'idAntiMu', 'idAntiEle', 'idMVAnew', 'idMVAoldDM', 'idMVAoldDMdR03',
       ],
       '2017' : [
         'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
