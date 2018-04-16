@@ -8,5 +8,6 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesProducerHTTv2 import jetSubstructureObservablesHTTv2
 from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer import trigObjMatcher
-from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight as puWeight_2016
+from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puAutoWeight as puWeight_2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2017 as jetmetUncertainties
