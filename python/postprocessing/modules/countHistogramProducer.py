@@ -126,7 +126,7 @@ all_histograms = [
 ]
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll_2016                         = lambda : countHistogramProducer(all_histograms)
+countHistogramAll_2016                         = lambda : countHistogramProducer('2016', all_histograms)
 countHistogramCount_2016                       = lambda : countHistogramProducer('2016', 'Count')
 countHistogramCountWeighted_2016               = lambda : countHistogramProducer('2016', 'CountWeighted')
 countHistogramCountFullWeighted_2016           = lambda : countHistogramProducer('2016', 'CountFullWeighted')
@@ -135,7 +135,7 @@ countHistogramCountNegWeight_2016              = lambda : countHistogramProducer
 countHistogramCountWeightedLHEWeightPdf_2016   = lambda : countHistogramProducer('2016', 'CountWeightedLHEWeightPdf')
 countHistogramCountWeightedLHEWeightScale_2016 = lambda : countHistogramProducer('2016', 'CountWeightedLHEWeightScale')
 
-countHistogramAll_2017                         = lambda : countHistogramProducer(all_histograms)
+countHistogramAll_2017                         = lambda : countHistogramProducer('2017', all_histograms)
 countHistogramCount_2017                       = lambda : countHistogramProducer('2017', 'Count')
 countHistogramCountWeighted_2017               = lambda : countHistogramProducer('2017', 'CountWeighted')
 countHistogramCountFullWeighted_2017           = lambda : countHistogramProducer('2017', 'CountFullWeighted')
