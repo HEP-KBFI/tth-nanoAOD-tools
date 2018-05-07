@@ -40,7 +40,7 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 ERA=2017
 
 # decide which modules you need to run
-NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2"
+NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2,trigObjMatcher"
 NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA,jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
 if [ "$ERA" = "2016" ]; then
   NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
@@ -60,8 +60,6 @@ nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules coun
 # the final output file will be at:
 ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
 ```
-
-**NB** `trigObjMatcher` cannot be run, yet, until we have understood and fixed the problem at nanoAOD production level.
 
 If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
 
