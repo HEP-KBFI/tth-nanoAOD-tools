@@ -39,9 +39,13 @@ mkdir -p $NANOAOD_OUTPUT_DIR
 # choose an era between 2016 and 2017
 ERA=2017
 
+# if running on 2017 MC, you need to set these variables in order to evaluate PU weights
+PILEUP=/some/path/to/a/file/containing/pu/histograms.root
+SAMPLE_NAME=effectively_histogram_name
+
 # decide which modules you need to run
 NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2,trigObjMatcher"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA,jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA($PILEUP;$SAMPLE_NAME),jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
 if [ "$ERA" = "2016" ]; then
   NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
 elif [ "$ERA" == "2017" ]; then
