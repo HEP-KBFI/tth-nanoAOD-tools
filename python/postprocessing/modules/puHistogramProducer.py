@@ -46,7 +46,7 @@ class puHistogramProducer(Module):
 
 pufile_dir = "%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/pileup" % os.environ['CMSSW_BASE']
 pufile_data2016 = os.path.join(pufile_dir, "PileupData_GoldenJSON_Full2016.root")
-pufile_data2017 = os.path.join(pufile_dir, "PileupData_ReRecoJSON_Full2017.root")
+pufile_data2017 = os.path.join(pufile_dir, "PileupData_ReRecoJSON_Full2017_oldnormtag.root")
 
 puHist2016 = lambda outputFn: puHistogramProducer(pufile_data2016, outputFn)
 puHist2017 = lambda outputFn: puHistogramProducer(pufile_data2017, outputFn)
