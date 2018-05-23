@@ -47,7 +47,8 @@ class countHistogramProducer(Module):
 
     self.isPrinted = {
       branchName : False for branchName in [
-        self.puWeightName, self.genWeightName, self.LHEPdfWeightName, self.LHEScaleWeightName
+        self.puWeightName, self.genWeightName, self.lheTHXWeightName,
+        self.LHEPdfWeightName, self.LHEScaleWeightName,
       ]
     }
 
@@ -111,6 +112,9 @@ class countHistogramProducer(Module):
         if hasattr(event, self.lheTHXWeightName):
           lheTHXWeight = getattr(event, self.lheTHXWeightName)
         else:
+          if not self.isPrinted[self.lheTHXWeightName]:
+            self.isPrinted[self.lheTHXWeightName] = True
+            print('Missing branch: %s' % self.lheTHXWeightName)
           lheTHXWeight = 1.
 
         puWeight = getattr(event, self.puWeightName)
