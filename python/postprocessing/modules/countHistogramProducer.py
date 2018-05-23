@@ -11,6 +11,7 @@ class countHistogramProducer(Module):
     self.era                = era
     self.puWeightName       = 'puWeight'
     self.genWeightName      = 'genWeight'
+    self.lheTHXWeightName   = 'LHEWeight_rwgt_12' # Corresponds to SM in THQ/THW samples
     self.LHEPdfWeightName   = 'LHEPdfWeight'
     self.LHEScaleWeightName = 'LHEScaleWeight'
     if self.era == '2016':
@@ -106,13 +107,19 @@ class countHistogramProducer(Module):
         self.histograms['CountNegWeight']['histogram'].Fill(1, 1 if genWeight_sign < 0 else 0)
 
       if hasattr(event, self.puWeightName):
+
+        if hasattr(event, self.lheTHXWeightName):
+          lheTHXWeight = getattr(event, self.lheTHXWeightName)
+        else:
+          lheTHXWeight = 1.
+
         puWeight = getattr(event, self.puWeightName)
-        countFullWeight = genWeight * puWeight
+        countFullWeight = genWeight * puWeight * lheTHXWeight
 
         if 'histogram' in self.histograms['CountWeighted']:
           if not self.isInitialized(['CountWeighted']):
             self.initHistograms(['CountWeighted'])
-          self.histograms['CountWeighted']['histogram'].Fill(1, genWeight_sign * puWeight)
+          self.histograms['CountWeighted']['histogram'].Fill(1, genWeight_sign * puWeight * lheTHXWeight)
         if 'histogram' in self.histograms['CountFullWeighted']:
           if not self.isInitialized(['CountFullWeighted']):
             self.initHistograms(['CountFullWeighted'])
