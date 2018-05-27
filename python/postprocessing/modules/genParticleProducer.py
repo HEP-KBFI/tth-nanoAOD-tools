@@ -158,10 +158,13 @@ def genPromptLeptonSelection(genParticles):
     genLeptonSelection(genParticles)
   )
 
+def genPhotonSelection(genParticles):
+  return filter(lambda genPart: genPart.pdgId == 22, genParticles)
+
 def genPromptPhotonSelection(genParticles):
   return filter(
-    lambda genPart: genPart.pdgId == 22 and genPart.status == 1 and genPart.checkIf('isPrompt'),
-    genParticles
+    lambda genPart: genPart.status == 1 and genPart.checkIf('isPrompt'),
+    genPhotonSelection(genParticles)
   )
 
 def genHiggsSelection(genParticles):
@@ -567,6 +570,7 @@ class genParticleProducer(Module):
 genLeptonEntry                      = ("GenLep",                         genPromptLeptonSelection)
 genLeptonAllEntry                   = ("GenLepAll",                      genLeptonSelection)
 genPromptPhotonEntry                = ("GenPhoton",                      genPromptPhotonSelection)
+genPhotonAllEntry                   = ("GenPhotonAll",                   genPhotonSelection)
 genHiggsEntry                       = ("GenHiggs",                       genHiggsSelection)
 genHiggsDaughtersEntry              = ("GenHiggsDaughters",              genHiggsDaughtersSelection)
 genNuEntry                          = ("GenNu",                          genNuSelection)
@@ -595,6 +599,7 @@ genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda
 genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all prompt stable leptons
 genLeptonAll                   = lambda : genParticleProducer(dict([genLeptonAllEntry]))                   # all stable leptons
 genPromptPhoton                = lambda : genParticleProducer(dict([genPromptPhotonEntry]))                # stable prompt photons
+genPhotonAll                   = lambda : genParticleProducer(dict([genPhotonAllEntry]))                   # all photons
 genHiggs                       = lambda : genParticleProducer(dict([genHiggsEntry]))                       # all Higgs (first in the decay chain)
 genHiggsDaughters              = lambda : genParticleProducer(dict([genHiggsDaughtersEntry]))              # all Higgs daughters
 genTau                         = lambda : genParticleProducer(dict([genTauEntry]))                         # all taus
@@ -623,6 +628,7 @@ genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
     genLeptonAllEntry,
     genPromptPhotonEntry,
+    genPhotonAllEntry,
     genHiggsEntry,
     genHiggsDaughtersEntry,
     genNuEntry,
