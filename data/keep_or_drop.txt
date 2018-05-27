@@ -1,6 +1,5 @@
 keep *
 drop *GenPart*
-drop *Photon*
 drop *SoftActivityJet*
 drop *IsoTrack*
 drop *OtherPV*
