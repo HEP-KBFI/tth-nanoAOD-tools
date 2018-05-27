@@ -115,7 +115,7 @@ class GenPartAux:
   def __repr__(self):
     return self.__str__()
 
-  def chechIf(self, condition):
+  def checkIf(self, condition):
     assert(condition in statusFlagsMap)
     return (self.statusFlags & (1 << statusFlagsMap[condition]) != 0)
 
@@ -149,11 +149,11 @@ def genLeptonSelection(genParticles):
 def genPromptLeptonSelection(genParticles):
   return filter(
     lambda genLepton:
-      genLepton.chechIf('isLastCopy') and
-      not genLepton.chechIf('isDirectHadronDecayProduct') and
+      genLepton.checkIf('isLastCopy') and
+      not genLepton.checkIf('isDirectHadronDecayProduct') and
       (
-        genLepton.chechIf('isPrompt') or
-        genLepton.chechIf('isDirectPromptTauDecayProduct')
+        genLepton.checkIf('isPrompt') or
+        genLepton.checkIf('isDirectPromptTauDecayProduct')
       ),
     genLeptonSelection(genParticles)
   )
