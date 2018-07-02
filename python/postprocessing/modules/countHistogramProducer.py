@@ -10,33 +10,70 @@ class countHistogramProducer(Module):
   def __init__(self, era, selection):
     self.era                = era
     self.puWeightName       = 'puWeight'
+    self.puWeightName_up    = '%sUp' % self.puWeightName
+    self.puWeightName_down  = '%sDown' % self.puWeightName
     self.genWeightName      = 'genWeight'
     self.lheTHXWeightName   = 'LHEWeight_rwgt_12' # Corresponds to SM in THQ/THW samples
     self.LHEPdfWeightName   = 'LHEPdfWeight'
     self.LHEScaleWeightName = 'LHEScaleWeight'
-    if self.era == '2016':
-      self.nLHEPdfWeight = 101
-    elif self.era == '2017':
-      self.nLHEPdfWeight = 33
-    else:
-      raise ValueError('Invalid era: %s' % self.era)
+    self.nLHEPdfWeight      = 101
     self.nLHEScaleWeight    = 9
 
     self.histograms = {
-      'Count'                      : { 'bins' : 1, 'min' : 0., 'max' : 2., },
-      'CountWeighted'              : { 'bins' : 1, 'min' : 0., 'max' : 2., },
-      'CountFullWeighted'          : { 'bins' : 1, 'min' : 0., 'max' : 2., },
-      'CountPosWeight'             : { 'bins' : 1, 'min' : 0., 'max' : 2., },
-      'CountNegWeight'             : { 'bins' : 1, 'min' : 0., 'max' : 2., },
+      'Count'                      : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(1)',                                        },
+      'CountWeighted'              : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(sgn(gen) * PU(central,up,down) * LHE(tH))', },
+      'CountFullWeighted'          : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(gen * PU(central,up,down) * LHE(tH))',      },
+      'CountWeightedNoPU'          : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(sgn(gen) * LHE(th))',                       },
+      'CountFullWeightedNoPU'      : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen * LHE(th))',                            },
+      'CountPosWeight'             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen > 0)',                                  },
+      'CountNegWeight'             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen < 0)',                                  },
       'CountWeightedLHEWeightPdf'  : {
-        'bins' : self.nLHEPdfWeight,
-        'min'  : -0.5,
-        'max'  : self.nLHEPdfWeight - 0.5,
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(sgn(gen) * PU(central) * LHE(pdf))',
+      },
+      'CountWeightedLHEWeightPdfNoPU': {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(sgn(gen) * LHE(pdf))',
+      },
+      'CountFullWeightedLHEWeightPdf'  : {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(gen * PU(central) * LHE(pdf))',
+      },
+      'CountFullWeightedLHEWeightPdfNoPU': {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(gen * LHE(pdf))',
       },
       'CountWeightedLHEWeightScale': {
-        'bins' : self.nLHEScaleWeight,
-        'min'  : -0.5,
-        'max'  : self.nLHEScaleWeight - 0.5,
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(sgn(gen) * PU(central) * LHE(scale))',
+      },
+      'CountWeightedLHEWeightScaleNoPU': {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(sgn(gen) * LHE(scale))',
+      },
+      'CountFullWeightedLHEWeightScale': {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(gen * PU(central) * LHE(scale))',
+      },
+      'CountFullWeightedLHEWeightScaleNoPU': {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(gen * LHE(scale))',
       },
     }
 
@@ -60,7 +97,7 @@ class countHistogramProducer(Module):
         histogramParams['bins'] = nofBins
         histogramParams['max'] = nofBins - 0.5
       histogramParams['histogram'] = ROOT.TH1F(
-        histogramName, histogramName,
+        histogramName, histogramParams['title'],
         histogramParams['bins'], histogramParams['min'], histogramParams['max']
       )
 
@@ -108,6 +145,8 @@ class countHistogramProducer(Module):
         self.histograms['CountNegWeight']['histogram'].Fill(1, 1 if genWeight_sign < 0 else 0)
 
       if hasattr(event, self.puWeightName):
+        assert(hasattr(event, self.puWeightName_up))
+        assert(hasattr(event, self.puWeightName_down))
 
         if hasattr(event, self.lheTHXWeightName):
           lheTHXWeight = getattr(event, self.lheTHXWeightName)
@@ -118,16 +157,32 @@ class countHistogramProducer(Module):
           lheTHXWeight = 1.
 
         puWeight = getattr(event, self.puWeightName)
-        countFullWeight = genWeight * puWeight * lheTHXWeight
+        puWeight_up = getattr(event, self.puWeightName_up)
+        puWeight_down = getattr(event, self.puWeightName_down)
 
         if 'histogram' in self.histograms['CountWeighted']:
           if not self.isInitialized(['CountWeighted']):
             self.initHistograms(['CountWeighted'])
-          self.histograms['CountWeighted']['histogram'].Fill(1, genWeight_sign * puWeight * lheTHXWeight)
+          self.histograms['CountWeighted']['histogram'].Fill(0., genWeight_sign * puWeight * lheTHXWeight)
+          self.histograms['CountWeighted']['histogram'].Fill(1., genWeight_sign * puWeight_up * lheTHXWeight)
+          self.histograms['CountWeighted']['histogram'].Fill(2., genWeight_sign * puWeight_down * lheTHXWeight)
+
         if 'histogram' in self.histograms['CountFullWeighted']:
           if not self.isInitialized(['CountFullWeighted']):
             self.initHistograms(['CountFullWeighted'])
-          self.histograms['CountFullWeighted']['histogram'].Fill(1, countFullWeight)
+          self.histograms['CountFullWeighted']['histogram'].Fill(0., genWeight * puWeight * lheTHXWeight)
+          self.histograms['CountFullWeighted']['histogram'].Fill(1., genWeight * puWeight_up * lheTHXWeight)
+          self.histograms['CountFullWeighted']['histogram'].Fill(2., genWeight * puWeight_down * lheTHXWeight)
+
+        if 'histogram' in self.histograms['CountWeightedNoPU']:
+          if not self.isInitialized(['CountWeightedNoPU']):
+            self.initHistograms(['CountWeightedNoPU'])
+          self.histograms['CountWeightedNoPU']['histogram'].Fill(0., genWeight_sign * lheTHXWeight)
+
+        if 'histogram' in self.histograms['CountFullWeightedNoPU']:
+          if not self.isInitialized(['CountFullWeightedNoPU']):
+            self.initHistograms(['CountFullWeightedNoPU'])
+          self.histograms['CountFullWeightedNoPU']['histogram'].Fill(0., genWeight * lheTHXWeight)
 
         if hasattr(event, self.LHEPdfWeightName):
           LHEPdfWeight = getattr(event, self.LHEPdfWeightName)
@@ -144,7 +199,29 @@ class countHistogramProducer(Module):
               self.initHistograms(['CountWeightedLHEWeightPdf'], self.nLHEPdfWeight)
             for lhe_pdf_idx in range(self.nLHEPdfWeight):
               self.histograms['CountWeightedLHEWeightPdf']['histogram'].Fill(
-                float(lhe_pdf_idx), countFullWeight * LHEPdfWeight[lhe_pdf_idx]
+                float(lhe_pdf_idx), genWeight_sign * puWeight * LHEPdfWeight[lhe_pdf_idx]
+              )
+          if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdf']:
+            if not self.isInitialized(['CountFullWeightedLHEWeightPdf']):
+              self.initHistograms(['CountFullWeightedLHEWeightPdf'], self.nLHEPdfWeight)
+            for lhe_pdf_idx in range(self.nLHEPdfWeight):
+              self.histograms['CountFullWeightedLHEWeightPdf']['histogram'].Fill(
+                float(lhe_pdf_idx), genWeight * puWeight * LHEPdfWeight[lhe_pdf_idx]
+              )
+
+          if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPU']:
+            if not self.isInitialized(['CountWeightedLHEWeightPdfNoPU']):
+              self.initHistograms(['CountWeightedLHEWeightPdfNoPU'], self.nLHEPdfWeight)
+            for lhe_pdf_idx in range(self.nLHEPdfWeight):
+              self.histograms['CountWeightedLHEWeightPdfNoPU']['histogram'].Fill(
+                float(lhe_pdf_idx), genWeight_sign * LHEPdfWeight[lhe_pdf_idx]
+              )
+          if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPU']:
+            if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPU']):
+              self.initHistograms(['CountFullWeightedLHEWeightPdfNoPU'], self.nLHEPdfWeight)
+            for lhe_pdf_idx in range(self.nLHEPdfWeight):
+              self.histograms['CountFullWeightedLHEWeightPdfNoPU']['histogram'].Fill(
+                float(lhe_pdf_idx), genWeight * LHEPdfWeight[lhe_pdf_idx]
               )
         else:
           if not self.isPrinted[self.LHEPdfWeightName]:
@@ -166,7 +243,29 @@ class countHistogramProducer(Module):
               self.initHistograms(['CountWeightedLHEWeightScale'], self.nLHEScaleWeight)
             for lhe_scale_idx in range(self.nLHEScaleWeight):
               self.histograms['CountWeightedLHEWeightScale']['histogram'].Fill(
-                float(lhe_scale_idx), countFullWeight * LHEScaleWeight[lhe_scale_idx]
+                float(lhe_scale_idx), genWeight_sign * puWeight * LHEScaleWeight[lhe_scale_idx]
+              )
+          if 'histogram' in self.histograms['CountFullWeightedLHEWeightScale']:
+            if not self.isInitialized(['CountFullWeightedLHEWeightScale']):
+              self.initHistograms(['CountFullWeightedLHEWeightScale'], self.nLHEScaleWeight)
+            for lhe_scale_idx in range(self.nLHEScaleWeight):
+              self.histograms['CountFullWeightedLHEWeightScale']['histogram'].Fill(
+                float(lhe_scale_idx), genWeight * puWeight * LHEScaleWeight[lhe_scale_idx]
+              )
+
+          if 'histogram' in self.histograms['CountWeightedLHEWeightScaleNoPU']:
+            if not self.isInitialized(['CountWeightedLHEWeightScaleNoPU']):
+              self.initHistograms(['CountWeightedLHEWeightScaleNoPU'], self.nLHEScaleWeight)
+            for lhe_scale_idx in range(self.nLHEScaleWeight):
+              self.histograms['CountWeightedLHEWeightScaleNoPU']['histogram'].Fill(
+                float(lhe_scale_idx), genWeight_sign * LHEScaleWeight[lhe_scale_idx]
+              )
+          if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleNoPU']:
+            if not self.isInitialized(['CountFullWeightedLHEWeightScaleNoPU']):
+              self.initHistograms(['CountFullWeightedLHEWeightScaleNoPU'], self.nLHEScaleWeight)
+            for lhe_scale_idx in range(self.nLHEScaleWeight):
+              self.histograms['CountFullWeightedLHEWeightScaleNoPU']['histogram'].Fill(
+                float(lhe_scale_idx), genWeight * LHEScaleWeight[lhe_scale_idx]
               )
         else:
           if not self.isPrinted[self.LHEScaleWeightName]:
@@ -189,28 +288,52 @@ class countHistogramProducer(Module):
 all_histograms = [
   'Count',
   'CountWeighted',
+  'CountWeightedNoPU',
   'CountFullWeighted',
+  'CountFullWeightedNoPU',
   'CountPosWeight',
   'CountNegWeight',
   'CountWeightedLHEWeightPdf',
+  'CountWeightedLHEWeightPdfNoPU',
+  'CountFullWeightedLHEWeightPdf',
+  'CountFullWeightedLHEWeightPdfNoPU',
   'CountWeightedLHEWeightScale',
+  'CountWeightedLHEWeightScaleNoPU',
+  'CountFullWeightedLHEWeightScale',
+  'CountFullWeightedLHEWeightScaleNoPU',
 ]
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll_2016                         = lambda : countHistogramProducer('2016', all_histograms)
-countHistogramCount_2016                       = lambda : countHistogramProducer('2016', ['Count'])
-countHistogramCountWeighted_2016               = lambda : countHistogramProducer('2016', ['CountWeighted'])
-countHistogramCountFullWeighted_2016           = lambda : countHistogramProducer('2016', ['CountFullWeighted'])
-countHistogramCountPosWeight_2016              = lambda : countHistogramProducer('2016', ['CountPosWeight'])
-countHistogramCountNegWeight_2016              = lambda : countHistogramProducer('2016', ['CountNegWeight'])
-countHistogramCountWeightedLHEWeightPdf_2016   = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightPdf'])
-countHistogramCountWeightedLHEWeightScale_2016 = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightScale'])
+countHistogramAll_2016                                 = lambda : countHistogramProducer('2016', all_histograms)
+countHistogramCount_2016                               = lambda : countHistogramProducer('2016', ['Count'])
+countHistogramCountWeighted_2016                       = lambda : countHistogramProducer('2016', ['CountWeighted'])
+countHistogramCountWeightedNoPU_2016                   = lambda : countHistogramProducer('2016', ['CountWeightedNoPU'])
+countHistogramCountFullWeighted_2016                   = lambda : countHistogramProducer('2016', ['CountFullWeighted'])
+countHistogramCountFullWeightedNoPU_2016               = lambda : countHistogramProducer('2016', ['CountFullWeightedNoPU'])
+countHistogramCountPosWeight_2016                      = lambda : countHistogramProducer('2016', ['CountPosWeight'])
+countHistogramCountNegWeight_2016                      = lambda : countHistogramProducer('2016', ['CountNegWeight'])
+countHistogramCountWeightedLHEWeightPdf_2016           = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightPdf'])
+countHistogramCountWeightedLHEWeightPdfNoPU_2016       = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightPdfNoPU'])
+countHistogramCountFullWeightedLHEWeightPdf_2016       = lambda : countHistogramProducer('2016', ['CountFullWeightedLHEWeightPdf'])
+countHistogramCountFullWeightedLHEWeightPdfNoPU_2016   = lambda : countHistogramProducer('2016', ['CountFullWeightedLHEWeightPdfNoPU'])
+countHistogramCountWeightedLHEWeightScale_2016         = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightScale'])
+countHistogramCountWeightedLHEWeightScaleNoPU_2016     = lambda : countHistogramProducer('2016', ['CountWeightedLHEWeightScaleNoPU'])
+countHistogramCountFullWeightedLHEWeightScale_2016     = lambda : countHistogramProducer('2016', ['CountFullWeightedLHEWeightScale'])
+countHistogramCountFullWeightedLHEWeightScaleNoPU_2016 = lambda : countHistogramProducer('2016', ['CountFullWeightedLHEWeightScaleNoPU'])
 
-countHistogramAll_2017                         = lambda : countHistogramProducer('2017', all_histograms)
-countHistogramCount_2017                       = lambda : countHistogramProducer('2017', ['Count'])
-countHistogramCountWeighted_2017               = lambda : countHistogramProducer('2017', ['CountWeighted'])
-countHistogramCountFullWeighted_2017           = lambda : countHistogramProducer('2017', ['CountFullWeighted'])
-countHistogramCountPosWeight_2017              = lambda : countHistogramProducer('2017', ['CountPosWeight'])
-countHistogramCountNegWeight_2017              = lambda : countHistogramProducer('2017', ['CountNegWeight'])
-countHistogramCountWeightedLHEWeightPdf_2017   = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightPdf'])
-countHistogramCountWeightedLHEWeightScale_2017 = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightScale'])
+countHistogramAll_2017                                 = lambda : countHistogramProducer('2017', all_histograms)
+countHistogramCount_2017                               = lambda : countHistogramProducer('2017', ['Count'])
+countHistogramCountWeighted_2017                       = lambda : countHistogramProducer('2017', ['CountWeighted'])
+countHistogramCountWeightedNoPU_2017                   = lambda : countHistogramProducer('2017', ['CountWeightedNoPU'])
+countHistogramCountFullWeighted_2017                   = lambda : countHistogramProducer('2017', ['CountFullWeighted'])
+countHistogramCountFullWeightedNoPU_2017               = lambda : countHistogramProducer('2017', ['CountFullWeightedNoPU'])
+countHistogramCountPosWeight_2017                      = lambda : countHistogramProducer('2017', ['CountPosWeight'])
+countHistogramCountNegWeight_2017                      = lambda : countHistogramProducer('2017', ['CountNegWeight'])
+countHistogramCountWeightedLHEWeightPdf_2017           = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightPdf'])
+countHistogramCountWeightedLHEWeightPdfNoPU_2017       = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightPdfNoPU'])
+countHistogramCountFullWeightedLHEWeightPdf_2017       = lambda : countHistogramProducer('2017', ['CountFullWeightedLHEWeightPdf'])
+countHistogramCountFullWeightedLHEWeightPdfNoPU_2017   = lambda : countHistogramProducer('2017', ['CountFullWeightedLHEWeightPdfNoPU'])
+countHistogramCountWeightedLHEWeightScale_2017         = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightScale'])
+countHistogramCountWeightedLHEWeightScaleNoPU_2017     = lambda : countHistogramProducer('2017', ['CountWeightedLHEWeightScaleNoPU'])
+countHistogramCountFullWeightedLHEWeightScale_2017     = lambda : countHistogramProducer('2017', ['CountFullWeightedLHEWeightScale'])
+countHistogramCountFullWeightedLHEWeightScaleNoPU_2017 = lambda : countHistogramProducer('2017', ['CountFullWeightedLHEWeightScaleNoPU'])
