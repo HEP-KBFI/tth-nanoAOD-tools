@@ -67,12 +67,6 @@ ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
 
 If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
 
-## TODO
-
-1. tH event weights lheWeightSM missing (but we dont have any 94X tH samples)
-
-The rest of the branches used in the [tth-htt analysis](https://github.com/HEP-KBFI/tth-htt/tree/nanoAOD) need to be renamed where necessary, or recomputed (such as JECDown, JECUp, miniIsoCharged and miniIsoNeutral; we don't do this computation here as we would need to loop over the events again because it is not possible to read the variables that are created within the event loop).
-
 ## Links
 
 1. Official tool for post-processing the nanoAOD Ntuples: https://github.com/cms-nanoAOD/nanoAOD-tools
