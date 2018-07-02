@@ -5,11 +5,13 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class puHistogramProducer(Module):
-    def __init__(self, targetfile, outputFileName, targethist = "pileup", nvtx_var = "Pileup_nTrueInt"):
+    def __init__(self, targetfile, histName, outputFileName, targethist = "pileup", nvtx_var = "Pileup_nTrueInt"):
         self.targeth = self.loadHisto(targetfile, targethist)
         ROOT.gROOT.cd()
-        self.myh = self.targeth.Clone("autoPU")
+        self.histName = histName
+        self.myh = self.targeth.Clone(self.histName)
         self.myh.Reset()
+        self.myh.SetTitle(self.histName)
         self.nvtxVar = nvtx_var
         self.outputFileName = outputFileName
 
@@ -29,7 +31,7 @@ class puHistogramProducer(Module):
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.myh.Reset()
         ROOT.gROOT.cd()
-        inputFile.Get("Events").Project("autoPU", self.nvtxVar)
+        inputFile.Get("Events").Project(self.histName, self.nvtxVar)
 
         outputHistoFile = ROOT.TFile.Open(self.outputFileName, 'recreate')
         if outputHistoFile:
@@ -48,5 +50,5 @@ pufile_dir = "%s/src/PhysicsTools/NanoAODTools/python/postprocessing/data/pileup
 pufile_data2016 = os.path.join(pufile_dir, "PileupData_GoldenJSON_Full2016.root")
 pufile_data2017 = os.path.join(pufile_dir, "PileupData_ReRecoJSON_v1_Full2017.root")
 
-puHist2016 = lambda outputFn: puHistogramProducer(pufile_data2016, outputFn)
-puHist2017 = lambda outputFn: puHistogramProducer(pufile_data2017, outputFn)
+puHist2016 = lambda outputFn, histName: puHistogramProducer(pufile_data2016, histName, outputFn)
+puHist2017 = lambda outputFn, histName: puHistogramProducer(pufile_data2017, histName, outputFn)
