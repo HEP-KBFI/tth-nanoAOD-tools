@@ -12,7 +12,8 @@ class egammaIdProducer(Module):
         self.electronLenBranchName = "n%s" % self.electronBranchName
         self.mvaSpring16GP_branchName = "mvaSpring16GP"
         self.mvaSpring16HZZ_branchName = "mvaSpring16HZZ"
-        self.mvaSpring16_branchName = "%s_mvaSpring16" % self.electronBranchName
+        self.mvaRaw_POG_branchName = "%s_mvaSpring16" % self.electronBranchName
+        self.mvaID_POG_branchName = "%s_WPL" % self.mvaRaw_POG_branchName
 
         self.min_mvaRawPOG_vlow = [ -0.30, -0.46, -0.63 ]
         self.min_mvaRawPOG_low  = [ -0.86, -0.85, -0.81 ]
@@ -36,28 +37,34 @@ class egammaIdProducer(Module):
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = wrappedOutputTree
-        self.out.branch(self.mvaSpring16_branchName, "O", lenVar = self.electronLenBranchName) # "O" means Bool_t
+        self.out.branch(self.mvaRaw_POG_branchName, "F", lenVar = self.electronLenBranchName)
+        self.out.branch(self.mvaID_POG_branchName,  "O", lenVar = self.electronLenBranchName) # "O" means Bool_t
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
     def analyze(self, event):
         electrons = Collection(event, self.electronBranchName)
-        mvaSpring16_arr = [ ]
+        mvaRaw_POG_arr = []
+        mvaID_POG_arr = []
         for electron in electrons:
             idxBin = self.get_absEtaIdx(electron)
             if electron.pt <= 10.:
-                mvaRawPOG = getattr(electron, self.mvaSpring16HZZ_branchName)
-                mvaRawPOGCut = self.min_mvaRawPOG_vlow[idxBin]
+                mvaRaw_POG = getattr(electron, self.mvaSpring16HZZ_branchName)
+                mvaRaw_POG_cut = self.min_mvaRawPOG_vlow[idxBin]
             else:
-                mvaRawPOG = getattr(electron, self.mvaSpring16GP_branchName)
+                mvaRaw_POG = getattr(electron, self.mvaSpring16GP_branchName)
                 a = self.min_mvaRawPOG_low[idxBin]
                 b = self.min_mvaRawPOG_high[idxBin]
                 c = (a - b) / 10.
-                mvaRawPOGCut = min(a, max(b, a - c * (electron.pt - 15.))) # warning: the _high WP must be looser than the _low one
-            mvaSpring16 = mvaRawPOG >= mvaRawPOGCut
-            mvaSpring16_arr.append(mvaSpring16)
-        self.out.fillBranch(self.mvaSpring16_branchName, mvaSpring16_arr)
+                mvaRaw_POG_cut = min(a, max(b, a - c * (electron.pt - 15.))) # warning: the _high WP must be looser than the _low one
+            mvaID_POG = mvaRaw_POG >= mvaRaw_POG_cut
+            mvaRaw_POG_arr.append(mvaRaw_POG)
+            mvaID_POG_arr.append(mvaID_POG)
+        assert(len(mvaRaw_POG_arr) == len(electrons))
+        assert(len(mvaID_POG_arr) == len(electrons))
+        self.out.fillBranch(self.mvaRaw_POG_branchName, mvaRaw_POG_arr)
+        self.out.fillBranch(self.mvaID_POG_branchName, mvaID_POG_arr)
 
         return True
 
