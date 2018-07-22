@@ -10,6 +10,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.jetSubstructureObservablesP
 from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer import trigObjMatcher
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017
 from tthAnalysis.NanoAODTools.postprocessing.modules.egammaIdProducer import egammaId
+from tthAnalysis.NanoAODTools.postprocessing.modules.flagTypeConverterProducer import flagTypeConverter
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight2016, puWeight2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.muonScaleResProducer import muonScaleRes2016, muonScaleRes2017
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2016, jetmetUncertainties2017
