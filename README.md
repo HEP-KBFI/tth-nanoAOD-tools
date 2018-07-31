@@ -7,8 +7,8 @@ Postprocessing scripts to add branches specific to ttH analysis to nanoAOD Ntupl
 # set up the CMSSW environment
 source /cvmfs/cms.cern.ch/cmsset_default.sh # !! or .csh
 export SCRAM_ARCH=slc6_amd64_gcc630 # !! or setenv SCRAM_ARCH slc6_amd64_gcc630
-cmsrel CMSSW_9_4_4
-cd CMSSW_9_4_4/src/
+cmsrel CMSSW_9_4_6_patch1
+cd CMSSW_9_4_6_patch1/src/
 cmsenv
 
 # clone necessary repositories
