@@ -131,9 +131,7 @@ class lepJetVarProducer(Module):
         pass
 
     def getUncorrectedPt(self, lepton, isElectron):
-        # No electron scale or smearing available for 2018 era, yet:
-        # See: https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/EgammaTools/python/calibratedEgammas_cff.py
-        if isElectron and self.era != "2018":
+        if isElectron:
             return lepton.pt / lepton.eCorr
         else:
             return lepton.pt
