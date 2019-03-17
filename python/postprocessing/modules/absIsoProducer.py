@@ -16,7 +16,8 @@ def get_allIsoBranchNames(relBrNeu):
 
 class absIsoProducer(Module):
 
-  def __init__(self):
+  def __init__(self, era):
+    self.era = era
     self.elBr_base = "Electron"
     self.muBr_base = "Muon"
     self.elCorr = "eCorr"
@@ -53,7 +54,9 @@ class absIsoProducer(Module):
     for lepBr_base in [self.elBr_base, self.muBr_base]:
       leps = Collection(event, lepBr_base)
       isElectron = lepBr_base == self.elBr_base
-      ptCorrFactors = [getattr(lep, self.elCorr) for lep in leps] if isElectron else ([1.] * len(leps))
+      # No electron scale or smearing available for 2018 era, yet:
+      # See: https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/EgammaTools/python/calibratedEgammas_cff.py
+      ptCorrFactors = [getattr(lep, self.elCorr) for lep in leps] if (isElectron and self.era != "2018") else ([1.] * len(leps))
       ptCorrs = [pt / ptCorrFactor for pt, ptCorrFactor in zip([lep.pt for lep in leps], ptCorrFactors)]
 
       for relBrNeu in self.relBranches_neu:
@@ -75,4 +78,6 @@ class absIsoProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-absIso = lambda : absIsoProducer()
+absIso_2016 = lambda : absIsoProducer("2016")
+absIso_2017 = lambda : absIsoProducer("2017")
+absIso_2018 = lambda : absIsoProducer("2018")

@@ -17,22 +17,14 @@ def logId(id_):
 
 class tauIDLogProducer(Module):
 
-  def __init__(self, era):
+  def __init__(self):
     self.tauBr_base = "Tau"
     self.tauBr_n    = "n%s" % self.tauBr_base
-    self.tauBrs_dict = {
-      '2016' : [
-        'idAntiMu', 'idAntiEle', 'idMVAnew', 'idMVAoldDM', 'idMVAoldDMdR03',
-      ],
-      '2017' : [
-        'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
-        'idMVAoldDM2017v1', 'idMVAoldDM2017v2',
-      ],
-    }
-    if era not in self.tauBrs_dict:
-      raise ValueError('Invalid era: %s' % era)
-    self.tauBr_ids = self.tauBrs_dict[era]
 
+    self.tauBr_ids = [
+      'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
+      'idMVAoldDM2017v1', 'idMVAoldDM2017v2',
+    ]
     self.tauBr_ids  = {
       tauBr_id : '%s_%s_log' % (self.tauBr_base, tauBr_id) for tauBr_id in self.tauBr_ids
     }
@@ -60,5 +52,4 @@ class tauIDLogProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-tauIDLog_2016 = lambda : tauIDLogProducer('2016')
-tauIDLog_2017 = lambda : tauIDLogProducer('2017')
+tauIDLog = lambda : tauIDLogProducer()

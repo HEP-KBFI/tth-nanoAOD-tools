@@ -11,14 +11,14 @@ sign = lambda x: int(math.copysign(1, x) if x != 0 else 0)
 
 
 statusFlagsMap = {
-  # comments taken from:
+  # Comments taken from:
   # DataFormats/HepMCCandidate/interface/GenParticle.h
   # PhysicsTools/HepMCCandAlgos/interface/MCTruthHelper.h
   #
-  # nomenclature taken from:
+  # Nomenclature taken from:
   # PhysicsTools/NanoAOD/python/genparticles_cff.py
   #
-  #TODO: use this map in other gen-lvl particle selectors as well
+  #TODO: use this map in other gen-lvl particle selectors as well:
   # GenLepFromTauFromTop -> isDirectPromptTauDecayProduct &&
   #                         isDirectHardProcessTauDecayProduct &&
   #                         isLastCopy &&
@@ -27,18 +27,15 @@ statusFlagsMap = {
   #                  isLastCopy &&
   #                  ! isDirectHadronDecayProduct
   #                  (&& maybe isHardProcessTauDecayProduct?)
-  #
   # GenLepFromTop -> isPrompt &&
   #                  isHardProcess &&
   #                  (isLastCopy || isLastCopyBeforeFSR) &&
   #                  ! isDirectHadronDecayProduct
   #
-  # Not sure if to choose (isLastCopy or isLastCopyBeforeFSR) or just isFirstCopy:
+  # Not sure whether to choose (isLastCopy or isLastCopyBeforeFSR) or just isFirstCopy:
   # GenWZQuark, GenHiggsDaughters, GenVbosons
   #
-  # Have no clue what exactly to require from GenTau
-  #
-  #
+  # Not sure what to require from GenTau
   'isPrompt'                           : 0,  # any decay product NOT coming from hadron, muon or tau decay
   'isDecayedLeptonHadron'              : 1,  # a particle coming from hadron, muon, or tau decay
                                              # (does not include resonance decays like W,Z,Higgs,top,etc)
@@ -142,7 +139,8 @@ class SelectionOptions:
   SAVE_NU_FROM_TAU_FROM_TOP              = 20
   SAVE_QUARK_FROM_W_FROM_TOP             = 21
 
-
+#NOTE status == 1 seems to exclude FSR leptons, see
+# https://github.com/cms-sw/cmssw/issues/26163
 def genLeptonSelection(genParticles):
   return filter(lambda genPart: abs(genPart.pdgId) in [11, 13] and genPart.status == 1, genParticles)
 

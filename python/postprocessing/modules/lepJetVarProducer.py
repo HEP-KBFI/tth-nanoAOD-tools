@@ -60,6 +60,7 @@ class lepJetVarProducer(Module):
     def __init__(self, era, btagAlgos):
         # define lepton and jet branches and branch used to access energy densitity rho
         # (the latter is needed to compute L1 jet energy corrections)
+        self.era = era
         self.electronBranchName = "Electron"
         self.muonBranchName     = "Muon"
         self.leptonBranchNames = [ self.electronBranchName, self.muonBranchName ]
@@ -69,9 +70,10 @@ class lepJetVarProducer(Module):
         # fail as early as possible
         self.btagAlgos = btagAlgos
         self.btagAlgoMap = {
-          'csvv2' : 'btagCSVV2',
-          'deep'  : 'btagDeepB',
-          'cmva'  : 'btagCMVA',
+          'deep'    : 'btagDeepB',
+          'deepjet' : 'btagDeepFlavB',
+          'csvv2'   : 'btagCSVV2',
+          'cmva'    : 'btagCMVA',
         }
         for btagAlgo in self.btagAlgos:
           if btagAlgo not in self.btagAlgoMap:
@@ -87,13 +89,15 @@ class lepJetVarProducer(Module):
 
         # define txt file with L1 jet energy corrections
         # (downloaded from https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC )
-        self.l1corrInputFilePath = os.environ['CMSSW_BASE'] + "/src/tthAnalysis/NanoAODTools/data/"
-        if era == '2016':
-            self.l1corrInputFileName = "Summer16_23Sep2016V4_MC_L1FastJet_AK4PFchs.txt"
-        elif era == '2017':
-          self.l1corrInputFileName = "Fall17_17Nov2017_V6_MC_L1FastJet_AK4PFchs.txt"
+        self.l1corrInputFilePath = os.path.join(os.environ['CMSSW_BASE'], "src/tthAnalysis/NanoAODTools/data")
+        if self.era == '2016':
+            self.l1corrInputFileName = "Summer16_07Aug2017_V11_MC_L1FastJet_AK4PFchs.txt"
+        elif self.era == '2017':
+          self.l1corrInputFileName = "Fall17_17Nov2017_V32_MC_L1FastJet_AK4PFchs.txt"
+        elif self.era == '2018':
+            self.l1corrInputFileName = "Autumn18_V8_MC_L1FastJet_AK4PFchs.txt"
         else:
-          raise ValueError("Invalid era: %s" % era)
+          raise ValueError("Invalid era: %s" % self.era)
 
         # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
@@ -104,8 +108,9 @@ class lepJetVarProducer(Module):
     def beginJob(self):
         # initialize L1 jet energy corrections
         # (cf. https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#OffsetJEC )
-        print("Loading L1 jet energy corrections from file '%s'" % os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName))
-        self.l1corrParams = ROOT.JetCorrectorParameters(os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName))
+        l1corrInputFileFullPath = os.path.join(self.l1corrInputFilePath, self.l1corrInputFileName)
+        print("Loading L1 jet energy corrections from file '%s'" % l1corrInputFileFullPath)
+        self.l1corrParams = ROOT.JetCorrectorParameters(l1corrInputFileFullPath)
         v_l1corrParams = getattr(ROOT, 'vector<JetCorrectorParameters>')()
         v_l1corrParams.push_back(self.l1corrParams)
         self.l1corr = ROOT.FactorizedJetCorrector(v_l1corrParams)
@@ -125,11 +130,19 @@ class lepJetVarProducer(Module):
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         pass
 
+    def getUncorrectedPt(self, lepton, isElectron):
+        # No electron scale or smearing available for 2018 era, yet:
+        # See: https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/EgammaTools/python/calibratedEgammas_cff.py
+        if isElectron and self.era != "2018":
+            return lepton.pt / lepton.eCorr
+        else:
+            return lepton.pt
+
     def jetLepAwareJEC(self, lepton, jet, rho, isElectron):
         corrFactor = (1. - jet.rawFactor)
         jet_rawPt = corrFactor*jet.pt
 
-        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
+        lepton_pt_uncorr = self.getUncorrectedPt(lepton, isElectron)
         p4l = ROOT.TLorentzVector()
         p4l.SetPtEtaPhiM(lepton_pt_uncorr, lepton.eta, lepton.phi, lepton.mass)
 
@@ -150,11 +163,11 @@ class lepJetVarProducer(Module):
 
     def getPtRatio(self, lepton, jet, rho, isElectron):
         p4j_lepAware = self.jetLepAwareJEC(lepton, jet, rho, isElectron)
-        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
+        lepton_pt_uncorr = self.getUncorrectedPt(lepton, isElectron)
         return min(lepton_pt_uncorr / p4j_lepAware.Pt(), 1.5)
 
     def getPtRelv2(self, lepton, jet, rho, isElectron):
-        lepton_pt_uncorr = (lepton.pt / lepton.eCorr) if isElectron else lepton.pt
+        lepton_pt_uncorr = self.getUncorrectedPt(lepton, isElectron)
         p4l = ROOT.TLorentzVector()
         p4l.SetPtEtaPhiM(lepton_pt_uncorr, lepton.eta, lepton.phi, lepton.mass)
 
@@ -199,12 +212,6 @@ class lepJetVarProducer(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-lepJetVarBTagAll_2016   = lambda : lepJetVarProducer('2016', ["csvv2", "deep", "cmva"])
-lepJetVarBTagCSVv2_2016 = lambda : lepJetVarProducer('2016', ["csvv2"])
-lepJetVarBTagDeep_2016  = lambda : lepJetVarProducer('2016', ["deep"])
-lepJetVarBTagCMVA_2016  = lambda : lepJetVarProducer('2016', ["cmva"])
-
-lepJetVarBTagAll_2017   = lambda : lepJetVarProducer('2017', ["csvv2", "deep", "cmva"])
-lepJetVarBTagCSVv2_2017 = lambda : lepJetVarProducer('2017', ["csvv2"])
-lepJetVarBTagDeep_2017  = lambda : lepJetVarProducer('2017', ["deep"])
-lepJetVarBTagCMVA_2017  = lambda : lepJetVarProducer('2017', ["cmva"])
+lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["deep", 'deepjet', "csvv2", "cmva"])
+lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["deep", 'deepjet', "csvv2"])
+lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["deep", 'deepjet'])
