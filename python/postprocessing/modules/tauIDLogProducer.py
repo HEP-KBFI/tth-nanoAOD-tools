@@ -22,8 +22,11 @@ class tauIDLogProducer(Module):
     self.tauBr_n    = "n%s" % self.tauBr_base
 
     self.tauBr_ids = [
-      'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
-      'idMVAoldDM2017v1', 'idMVAoldDM2017v2', 'idAntiEle2018'
+      'idAntiMu', 'idAntiEle', 'idAntiEle2018',
+      'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2', 'idMVAoldDM2017v1', 'idMVAoldDM2017v2',
+      'idDeepTau2017v1VSe', 'idDeepTau2017v1VSmu', 'idDeepTau2017v1VSjet',
+      # not adding idDpfTau2016v0VSall since there's only one WP: Tight
+      # no WPs in DPFTau2016v1
     ]
     self.tauBr_ids  = {
       tauBr_id : '%s_%s_log' % (self.tauBr_base, tauBr_id) for tauBr_id in self.tauBr_ids
