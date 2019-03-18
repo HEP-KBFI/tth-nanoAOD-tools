@@ -38,8 +38,14 @@ Here's how to generate config file for NanoAOD production with 2017 reMiniAODv2 
 ```bash
 launchall_nanoaod.sh -e 2017v2 -j sync -g -n 10
 
+export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
+mkdir -p $NANOAOD_OUTPUT_DIR
+cd $NANOAOD_OUTPUT_DIR
+
 # produce the Ntuple
 cmsRun $CMSSW_BASE/src/tthAnalysis/NanoAOD/test/cfgs/nano_sync_RunIIFall17MiniAODv2_cfg.py &> out.log
+
+# (output is in $NANOAOD_OUTPUT_DIR/tree.root)
 ```
 
 ## How to run the post-processing steps:
@@ -47,39 +53,50 @@ cmsRun $CMSSW_BASE/src/tthAnalysis/NanoAOD/test/cfgs/nano_sync_RunIIFall17MiniAO
 The output file name is created by appending a suffix to the basename of the input file, specified by the option `-s`.
 
 ```bash
-export NANOAOD_OUTPUT_DIR=~/sandbox/nanoAODs # or any other directory you prefer
-mkdir -p $NANOAOD_OUTPUT_DIR
+# cd $NANOAOD_OUTPUT_DIR in case you already haven't
 
-# choose an era between 2016 and 2017
+# choose an era between 2016, 2017 and 2018
 ERA=2017
 
-# if running on 2017 MC, you need to set these variables in order to evaluate PU weights
+# when running on MC, you need to set these variables in order to evaluate PU weights
+# this file can be produced w/ e.g.
+# https://github.com/HEP-KBFI/tth-htt/blob/master/scripts/puHistogramProducer.sh
 PILEUP=/some/path/to/a/file/containing/pu/histograms.root
 SAMPLE_NAME=effectively_histogram_name
 
-# decide which modules you need to run
-NANO_MODULES_DATA="lepJetVarBTagAll_$ERA,absIso,tauIDLog_$ERA,jetSubstructureObservablesHTTv2,trigObjMatcher"
-NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight_$ERA($PILEUP;$SAMPLE_NAME),jetmetUncertainties$ERA,btagSF_csvv2_$ERA"
+# set up modules for data and MC
+NANO_MODULES_DATA="absIso,tauIDLog,jetSubstructureObservablesHTTv2,trigObjMatcher"
+NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight${ERA}($PILEUP;$SAMPLE_NAME),\
+jetmetUncertainties${ERA},btagSF_deep_${ERA},btagSF_deepFlav_${ERA}"
+
 if [ "$ERA" = "2016" ]; then
-  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_cmva_$ERA";
+  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_csvv2_${ERA},egammaId";
 elif [ "$ERA" == "2017" ]; then
-  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_deep_$ERA";
+  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_csvv2_${ERA}";
 fi
+
+# decide which modules you need to run
 NANO_MODULES=NANO_MODULES_MC
 
 nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
-  $NANOAOD_OUTPUT_DIR ../NanoAOD/test/nano.root
+  $PWD tree.root
 
 # remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
-nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll_$ERA \
+nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll \
   -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt                           \
-  $NANOAOD_OUTPUT_DIR $NANOAOD_OUTPUT_DIR/nano_i.root
+  $PWD tree_i.root
 
 # the final output file will be at:
-ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
+ls -l $NANOAOD_OUTPUT_DIR/tree_ii.root
 ```
 
 **Note** If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
+
+Unused yet functional modules:
+- `lepJetVarBTagAll_${ERA}` -- the information is already saved during NanoAOD production and is actually more accurate due to superior lepton-to-jet matching;
+- `jetmetUncertainties${ERA}AK8Puppi` -- not relevant as long as we don't plan to recalibrate AK8 jets;
+- `btagSF_cmva_2016` -- b-tagging discriminator deprecated since 2017;
+- `flagTypeConverter`-- not relevant, unless running on `80x` datasets.
 
 ## Links
 
