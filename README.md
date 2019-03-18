@@ -76,7 +76,7 @@ elif [ "$ERA" == "2017" ]; then
 fi
 
 # decide which modules you need to run
-NANO_MODULES=NANO_MODULES_MC
+NANO_MODULES=$NANO_MODULES_MC
 
 nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NANO_MODULES \
   $PWD tree.root
