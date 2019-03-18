@@ -23,7 +23,7 @@ class tauIDLogProducer(Module):
 
     self.tauBr_ids = [
       'idAntiMu', 'idAntiEle', 'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2',
-      'idMVAoldDM2017v1', 'idMVAoldDM2017v2',
+      'idMVAoldDM2017v1', 'idMVAoldDM2017v2', 'idAntiEle2018'
     ]
     self.tauBr_ids  = {
       tauBr_id : '%s_%s_log' % (self.tauBr_base, tauBr_id) for tauBr_id in self.tauBr_ids

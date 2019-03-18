@@ -1,5 +1,7 @@
 from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import btagSFProducer
 
+#NOTE assumes FullSim; no support for FastSim implemented, yet
+
 class btagSFProducer_explicitBranchNames(btagSFProducer):
   def __init__(self, era, algo, verbose = 0):
     btagSFProducer.__init__(self, era, algo, None, verbose)
