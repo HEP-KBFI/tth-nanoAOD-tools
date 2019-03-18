@@ -21,7 +21,7 @@ git checkout master-102x
 git pull
 
 # (optional) clone additional code that is used during NanoAOD production
-git clone https://github.com/HEP-KBFI/tth-nanoAOD $CMSSW_BASE/src/tthAnalysis/NanoAOD
+git clone https://github.com/HEP-KBFI/tth-nanoAOD.git $CMSSW_BASE/src/tthAnalysis/NanoAOD
 
 # clone repositories needed for NanoAOD post-processing
 git clone https://github.com/HEP-KBFI/nanoAOD-tools.git     $CMSSW_BASE/src/PhysicsTools/NanoAODTools
