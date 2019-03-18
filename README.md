@@ -5,27 +5,41 @@ Postprocessing scripts to add branches specific to ttH analysis to nanoAOD Ntupl
 
 ```bash
 # set up the CMSSW environment
-source /cvmfs/cms.cern.ch/cmsset_default.sh # !! or .csh
-export SCRAM_ARCH=slc6_amd64_gcc630 # !! or setenv SCRAM_ARCH slc6_amd64_gcc630
-cmsrel CMSSW_9_4_6_patch1
-cd CMSSW_9_4_6_patch1/src/
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+export SCRAM_ARCH=slc6_amd64_gcc700
+cmsrel CMSSW_10_2_10
+cd $_/src/
 cmsenv
 
-# clone necessary repositories
-git cms-merge-topic cms-nanoAOD:master
+# set up our CMSSW fork
+git init
+git config core.sparseCheckout true
+echo -e 'PhysicsTools/NanoAOD/*\n' > .git/info/sparse-checkout
+git remote add origin https://github.com/HEP-KBFI/cmssw.git
+git fetch origin
+git checkout master-102x
+git pull
+
+# (optional) clone additional code that is used during NanoAOD production
+git clone https://github.com/HEP-KBFI/tth-nanoAOD $CMSSW_BASE/src/tthAnalysis/NanoAOD
+
+# clone repositories needed for NanoAOD post-processing
 git clone https://github.com/HEP-KBFI/nanoAOD-tools.git     $CMSSW_BASE/src/PhysicsTools/NanoAODTools
 git clone https://github.com/HEP-KBFI/tth-nanoAOD-tools.git $CMSSW_BASE/src/tthAnalysis/NanoAODTools
 
 # compile the thing
 cd $CMSSW_BASE/src
-scram b -j 16
+scram b -j 8
 ```
 
-## Generate an example nanoAOD file
+## Generate an example nanoAOD file (optional)
 
+Here's how to generate config file for NanoAOD production with 2017 reMiniAODv2 conditions for 10 events from ttH MC that we use in the synchronization:
 ```bash
-cd $CMSSW_BASE/src/PhysicsTools/NanoAOD/test
-cmsRun nano_cfg.py                           # probably change the paths to the input files
+launchall_nanoaod.sh -e 2017v2 -j sync -g -n 10
+
+# produce the Ntuple
+cmsRun $CMSSW_BASE/src/tthAnalysis/NanoAOD/test/cfgs/nano_sync_RunIIFall17MiniAODv2_cfg.py &> out.log
 ```
 
 ## How to run the post-processing steps:
@@ -65,7 +79,7 @@ nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules coun
 ls -l $NANOAOD_OUTPUT_DIR/nano_ii.root
 ```
 
-If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
+**Note** If you want to add more modules then you must add the relevant import statements to `$CMSSW_BASE/src/tthAnalysis/NanoAODTools/python/postprocessing/tthModules.py` and recompile the NanoAODTools packages in `PhysicsTools` and `tthAnalysis` in order for the changes to take effect.
 
 ## Links
 
