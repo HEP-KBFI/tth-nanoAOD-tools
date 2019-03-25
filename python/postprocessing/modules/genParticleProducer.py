@@ -90,7 +90,7 @@ class MassTable:
     return sign(genParticleInstance.Charge())
 
 
-class GenPartAux:
+class GenPartAux(object):
   def __init__(self, genPart, idx, massTable):
     self.pt               = genPart.pt
     self.eta              = genPart.eta

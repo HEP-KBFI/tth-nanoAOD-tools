@@ -7,6 +7,12 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import MassTable, GenPartAux
 
 import collections
+import logging
+
+class GenPartAuxAug(GenPartAux):
+  def __init__(self, genPart, idx, massTable):
+    super(self.__class__, self).__init__(genPart, idx, massTable)
+    self.genPartFlav = 0
 
 class GenJetAux:
   def __init__(self, genJet, idx):
@@ -19,6 +25,7 @@ class GenJetAux:
     self.status           = -1
     self.statusFlags      = -1
     self.genPartIdxMother = -1
+    self.genPartFlav      = 0
     self.idx              = idx
 
   def __str__(self):
@@ -33,7 +40,7 @@ class GenJetAux:
 def getDefaultValue(genVar):
   if genVar in [ 'status', 'statusFlags' ]:
     return -1
-  elif genVar in [ 'pdgId', 'charge' ]:
+  elif genVar in [ 'pdgId', 'charge', 'genPartFlav' ]:
     return 0
   else:
     return 0.
@@ -44,7 +51,6 @@ class genParticleMatchProducer(Module):
 
     self.genPartBr    = 'GenPart'
     self.genPartJetBr = 'GenJet'
-    self.genPartTauBr = 'GenVisTau'
 
     self.muBr = 'Muon'
     self.elBr = 'Electron'
@@ -52,10 +58,8 @@ class genParticleMatchProducer(Module):
     self.jtBr = 'Jet'
 
     self.genLepBr = 'genLepton'
-    self.genTauBr = 'genTau'
     self.genPhoBr = 'genPhoton'
     self.genJetBr = 'genJet'
-    self.genOthBr = 'genOther'
 
     self.genVars = collections.OrderedDict([
       ('pt',          'F'),
@@ -66,6 +70,7 @@ class genParticleMatchProducer(Module):
       ('charge',      'I'),
       ('status',      'I'),
       ('statusFlags', 'I'),
+      ('genPartFlav', 'b'),
     ])
 
   def beginJob(self):
@@ -76,8 +81,16 @@ class genParticleMatchProducer(Module):
 
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
-    for recoObjBr in [ self.muBr, self.elBr, self.taBr ]: #, self.jtBr ]:
-      for genObjBr in [ self.genLepBr, self.genPhoBr, self.genOthBr, self.genJetBr ]:#, self.genTauBr, self.genJetBr ]:
+    for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
+      for genObjBr in [ self.genLepBr, self.genPhoBr, self.genJetBr ]:
+
+        if recoObjBr != self.elBr and genObjBr == self.genPhoBr:
+          # match gen photons only to reco electrons
+          continue
+        if recoObjBr == self.jtBr and genObjBr != self.genJetBr:
+          # match reco jets only to gen jets
+          continue
+
         for genVar in self.genVars:
           self.out.branch('_'.join([ recoObjBr, genObjBr, genVar ]), self.genVars[genVar], lenVar = 'n{}'.format(recoObjBr))
 
@@ -85,8 +98,10 @@ class genParticleMatchProducer(Module):
     pass
 
   def analyze(self, event):
+
+    # read the collections
     genParticles  = {
-      idx : GenPartAux(part, idx, self.massTable)
+      idx : GenPartAuxAug(part, idx, self.massTable)
       for idx, part in enumerate(Collection(event, self.genPartBr))
     }
     genJets = {
@@ -95,51 +110,79 @@ class genParticleMatchProducer(Module):
     }
     jets = Collection(event, self.jtBr)
 
+    # construct output arrays
     genOut = {}
-    for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:#, self.jtBr ]:
+    for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
       genOut[recoObjBr] = {}
-      for genObjBr in [ self.genLepBr, self.genTauBr, self.genPhoBr, self.genJetBr, self.genOthBr ]:
+      for genObjBr in [ self.genLepBr, self.genPhoBr, self.genJetBr ]:
+
+        if recoObjBr != self.elBr and genObjBr == self.genPhoBr:
+          # match gen photons only to reco electrons
+          continue
+        if recoObjBr == self.jtBr and genObjBr != self.genJetBr:
+          # match reco jets only to gen jets
+          continue
+
         genOut[recoObjBr][genObjBr] = []
 
+    # perform index-based gen matching for electrons, muons and taus to gen leptons, jets (and photons)
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:
       recoObjs = Collection(event, recoObjBr)
 
       for recoObj in recoObjs:
 
-        if recoObj.genPartIdx >= 0:
+        # matching to gen leptons (and photons)
+        if recoObj.genPartIdx >= 0 and recoObj.genPartIdx < len(genParticles):
           genPart = genParticles[recoObj.genPartIdx]
+          genPart.genPartFlav = recoObj.genPartFlav
 
           if abs(genPart.pdgId) in [ 11, 13 ]:
             genOut[recoObjBr][self.genLepBr].append(genPart)
           else:
             genOut[recoObjBr][self.genLepBr].append(None)
 
-          if abs(genPart.pdgId) == 22:
-            genOut[recoObjBr][self.genPhoBr].append(genPart)
-          else:
-            genOut[recoObjBr][self.genPhoBr].append(None)
-
-          if abs(genPart.pdgId) not in [ 11, 13, 22 ]:
-            genOut[recoObjBr][self.genOthBr].append(genPart)
-          else:
-            genOut[recoObjBr][self.genOthBr].append(None)
+          if recoObjBr == self.elBr:
+            # gen photons are matched only to electrons
+            if abs(genPart.pdgId) == 22:
+              genOut[recoObjBr][self.genPhoBr].append(genPart)
+            else:
+              genOut[recoObjBr][self.genPhoBr].append(None)
 
         else:
-          for genObjBr in [ self.genLepBr, self.genPhoBr, self.genOthBr ]:
-            genOut[recoObjBr][genObjBr].append(None)
+          genOut[recoObjBr][self.genLepBr].append(None)
+          if recoObjBr == self.elBr:
+            # gen photons are matched only to electrons
+            genOut[recoObjBr][self.genPhoBr].append(None)
 
-        if recoObj.jetIdx >= 0:
+        # matching to gen jets
+        if recoObj.jetIdx >= 0 and recoObj.jetIdx < len(jets):
           jet = jets[recoObj.jetIdx]
 
-          if jet.genJetIdx >= 0:
+          if jet.genJetIdx >= 0 and jet.genJetIdx < len(genJets):
             genOut[recoObjBr][self.genJetBr].append(genJets[jet.genJetIdx])
           else:
             genOut[recoObjBr][self.genJetBr].append(None)
         else:
           genOut[recoObjBr][self.genJetBr].append(None)
 
-    for recoObjBr in [self.muBr, self.elBr, self.taBr ]:#, self.jtBr]:
-      for genObjBr in [self.genLepBr, self.genPhoBr, self.genOthBr, self.genJetBr ]:# self.genTauBr
+    # match gen jets to reco jets
+    for jet in jets:
+      if jet.genJetIdx >= 0 and jet.genJetIdx < len(genJets):
+        genOut[self.jtBr][self.genJetBr].append(genJets[jet.genJetIdx])
+      else:
+        genOut[self.jtBr][self.genJetBr].append(None)
+
+    # save the results
+    for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
+      for genObjBr in [ self.genLepBr, self.genPhoBr, self.genJetBr ]:
+
+        if recoObjBr != self.elBr and genObjBr == self.genPhoBr:
+          # match gen photons only to reco electrons
+          continue
+        if recoObjBr == self.jtBr and genObjBr != self.genJetBr:
+          # match reco jets only to gen jets
+          continue
+
         genOutArr = genOut[recoObjBr][genObjBr]
         for genVar in self.genVars:
           genVarArr = map(lambda genObj: getattr(genObj, genVar) if genObj is not None else getDefaultValue(genVar), genOutArr)
