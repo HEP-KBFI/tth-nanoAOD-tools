@@ -1,5 +1,5 @@
 from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import genAll
-from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleMatchProducer import genParticleMatcher
+from tthAnalysis.NanoAODTools.postprocessing.modules.genMatchCollectionProducer import genMatchCollection
 from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import lepJetVarBTagAll_2016, lepJetVarBTagAll_2017, lepJetVarBTagAll_2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
