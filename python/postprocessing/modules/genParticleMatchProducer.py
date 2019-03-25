@@ -30,6 +30,7 @@ class genParticleMatchProducer(Module):
     self.genTauBr = 'genTau'
     self.genPhoBr = 'genPhoton'
     self.genJetBr = 'genJet'
+    self.genOthBr = 'genOther'
 
     self.genVars = collections.OrderedDict([
       ('pt',          'F'),
@@ -51,7 +52,7 @@ class genParticleMatchProducer(Module):
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]: #, self.jtBr ]:
-      for genObjBr in [ self.genLepBr ]:#, self.genTauBr, self.genPhoBr, self.genJetBr ]:
+      for genObjBr in [ self.genLepBr, self.genPhoBr, self.genOthBr ]:#, self.genTauBr, self.genJetBr ]:
         for genVar in self.genVars:
           self.out.branch('_'.join([ recoObjBr, genObjBr, genVar ]), self.genVars[genVar], lenVar = 'n{}'.format(recoObjBr))
 
@@ -66,7 +67,7 @@ class genParticleMatchProducer(Module):
     genOut = {}
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:#, self.jtBr ]:
       genOut[recoObjBr] = {}
-      for genObjBr in [ self.genLepBr, self.genTauBr, self.genPhoBr, self.genJetBr ]:
+      for genObjBr in [ self.genLepBr, self.genTauBr, self.genPhoBr, self.genJetBr, self.genOthBr ]:
         genOut[recoObjBr][genObjBr] = []
 
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:
@@ -75,15 +76,28 @@ class genParticleMatchProducer(Module):
       for recoObj in recoObjs:
         if recoObj.genPartIdx >= 0:
           genPart = genParticles[recoObj.genPartIdx]
+
           if abs(genPart.pdgId) in [ 11, 13 ]:
             genOut[recoObjBr][self.genLepBr].append(genPart)
           else:
             genOut[recoObjBr][self.genLepBr].append(None)
+
+          if abs(genPart.pdgId) == 22:
+            genOut[recoObjBr][self.genPhoBr].append(genPart)
+          else:
+            genOut[recoObjBr][self.genPhoBr].append(None)
+
+          if abs(genPart.pdgId) not in [ 11, 13, 22 ]:
+            genOut[recoObjBr][self.genOthBr].append(genPart)
+          else:
+            genOut[recoObjBr][self.genOthBr].append(None)
+
         else:
-          genOut[recoObjBr][self.genLepBr].append(None)
+          for genObjBr in [ self.genLepBr, self.genPhoBr, self.genOthBr ]:
+            genOut[recoObjBr][genObjBr].append(None)
 
     for recoObjBr in [self.muBr, self.elBr, self.taBr ]:#, self.jtBr]:
-      for genObjBr in [self.genLepBr ]:#, self.genTauBr, self.genPhoBr, self.genJetBr]:
+      for genObjBr in [self.genLepBr, self.genPhoBr, self.genOthBr ]:#, self.genTauBr, self.genJetBr]:
         genOutArr = genOut[recoObjBr][genObjBr]
         for genVar in self.genVars:
           genVarArr = map(lambda genObj: getattr(genObj, genVar) if genObj is not None else getDefaultValue(genVar), genOutArr)
