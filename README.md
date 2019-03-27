@@ -84,7 +84,6 @@ nano_postproc.py -s _i -I tthAnalysis.NanoAODTools.postprocessing.tthModules $NA
 
 # remove unused branches (cannot remove the branches we're working with, hence the 2nd command)
 nano_postproc.py -s i -I tthAnalysis.NanoAODTools.postprocessing.tthModules countHistogramAll \
-  -b $CMSSW_BASE/src/tthAnalysis/NanoAODTools/data/keep_or_drop.txt                           \
   $PWD tree_i.root
 
 # the final output file will be at:
