@@ -70,20 +70,12 @@ class genMatchCollectionProducer(Module):
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
     for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
-      if recoObjBr != self.jtBr:
-        genCollectionName = '{}GenMatch'.format(recoObjBr)
-        genCollectionLenName = 'n{}'.format(genCollectionName)
-        self.out.branch(genCollectionLenName, 'i')
-        for genVar in self.genVars:
-          self.out.branch('{}_{}'.format(genCollectionName, genVar), self.genVars[genVar], lenVar = genCollectionLenName)
-        self.out.branch('{}_genMatchIdx'.format(recoObjBr), 'I', lenVar = 'n{}'.format(recoObjBr))
-
-      genJetCollectionName = '{}GenJetMatch'.format(recoObjBr)
-      genJetCollectionLenName = 'n{}'.format(genJetCollectionName)
-      self.out.branch(genJetCollectionLenName, 'i')
+      genCollectionName = '{}GenMatch'.format(recoObjBr)
+      genCollectionLenName = 'n{}'.format(genCollectionName)
+      self.out.branch(genCollectionLenName, 'i')
       for genVar in self.genVars:
-        self.out.branch('{}_{}'.format(genJetCollectionName, genVar), self.genVars[genVar], lenVar = genJetCollectionLenName)
-      self.out.branch('{}_genJetMatchIdx'.format(recoObjBr), 'I', lenVar = 'n{}'.format(recoObjBr))
+        self.out.branch('{}_{}'.format(genCollectionName, genVar), self.genVars[genVar], lenVar = genCollectionLenName)
+      self.out.branch('{}_genMatchIdx'.format(recoObjBr), 'I', lenVar = 'n{}'.format(recoObjBr))
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     pass
@@ -95,24 +87,13 @@ class genMatchCollectionProducer(Module):
       idx : GenPartAuxAug(part, idx, self.massTable)
       for idx, part in enumerate(Collection(event, self.genPartBr))
     }
-    genJets = {
-      idx: GenJetAux(part, idx)
-      for idx, part in enumerate(Collection(event, self.genPartJetBr))
-    }
-    jets = Collection(event, self.jtBr)
 
-    jets_len = len(jets)
-
-    recoGenMatches    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr            ] }
-    recoGenJetMatches = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
-
-    genMatchIdxs    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr            ] }
-    genJetMatchIdxs = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
+    recoGenMatches    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
+    genMatchIdxs    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
 
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:
       recoCollection = Collection(event, recoObjBr)
       nof_genMatches = 0
-      nof_genJetMatches = 0
 
       for recoObj in recoCollection:
         if recoObj.genPartIdx in genParts:
@@ -124,39 +105,26 @@ class genMatchCollectionProducer(Module):
         else:
           genMatchIdxs[recoObjBr].append(-1)
 
-        if recoObj.jetIdx >= 0 and recoObj.jetIdx < jets_len:
-          jetMatch_genJetIdx = jets[recoObj.jetIdx].genJetIdx
-          if jetMatch_genJetIdx in genJets:
-            recoGenJetMatches[recoObjBr].append(genJets[jetMatch_genJetIdx])
-            genJetMatchIdxs[recoObjBr].append(nof_genJetMatches)
-            nof_genJetMatches += 1
-          else:
-            genJetMatchIdxs[recoObjBr].append(-1)
-        else:
-          genJetMatchIdxs[recoObjBr].append(-1)
-
-    nof_genJetMatches = 0
+    nof_genMatches = 0
+    jets = Collection(event, self.jtBr)
+    genJets = {
+      idx: GenJetAux(part, idx)
+      for idx, part in enumerate(Collection(event, self.genPartJetBr))
+    }
     for jet in jets:
       if jet.genJetIdx in genJets:
-        recoGenJetMatches[self.jtBr].append(genJets[jet.genJetIdx])
-        genJetMatchIdxs[self.jtBr].append(nof_genJetMatches)
-        nof_genJetMatches += 1
+        recoGenMatches[self.jtBr].append(genJets[jet.genJetIdx])
+        genMatchIdxs[self.jtBr].append(nof_genMatches)
+        nof_genMatches += 1
       else:
-        genJetMatchIdxs[self.jtBr].append(-1)
+        genMatchIdxs[self.jtBr].append(-1)
     
     for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
-      if recoObjBr != self.jtBr:
-        genCollectionName = '{}GenMatch'.format(recoObjBr)
-        for genVar in self.genVars:
-          genVarArr = map(lambda genObj: getattr(genObj, genVar), recoGenMatches[recoObjBr])
-          self.out.fillBranch('{}_{}'.format(genCollectionName, genVar), genVarArr)
-        self.out.fillBranch('{}_genMatchIdx'.format(recoObjBr), genMatchIdxs[recoObjBr])
-
-      genJetCollectionName = '{}GenJetMatch'.format(recoObjBr)
+      genCollectionName = '{}GenMatch'.format(recoObjBr)
       for genVar in self.genVars:
-        genVarArr = map(lambda genObj: getattr(genObj, genVar), recoGenJetMatches[recoObjBr])
-        self.out.fillBranch('{}_{}'.format(genJetCollectionName, genVar), genVarArr)
-      self.out.fillBranch('{}_genJetMatchIdx'.format(recoObjBr), genJetMatchIdxs[recoObjBr])
+        genVarArr = map(lambda genObj: getattr(genObj, genVar), recoGenMatches[recoObjBr])
+        self.out.fillBranch('{}_{}'.format(genCollectionName, genVar), genVarArr)
+      self.out.fillBranch('{}_genMatchIdx'.format(recoObjBr), genMatchIdxs[recoObjBr])
 
     return True
 
