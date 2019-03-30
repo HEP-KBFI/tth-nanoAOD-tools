@@ -25,7 +25,7 @@ class tauIDLogProducer(Module):
       'idAntiMu', 'idAntiEle', 'idAntiEle2018',
       'idMVAnewDM2017v2', 'idMVAoldDM', 'idMVAoldDMdR032017v2', 'idMVAoldDM2017v1', 'idMVAoldDM2017v2',
       'idDeepTau2017v1VSe', 'idDeepTau2017v1VSmu', 'idDeepTau2017v1VSjet',
-      # not adding idDpfTau2016v0VSall since there's only one WP: Tight
+      'idDpfTau2016v0VSall',
       # no WPs in DPFTau2016v1
     ]
     self.tauBr_ids  = {
