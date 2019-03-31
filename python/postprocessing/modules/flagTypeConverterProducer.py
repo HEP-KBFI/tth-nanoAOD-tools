@@ -8,10 +8,7 @@ class flagTypeConverterProducer(Module):
 
     def __init__(self):
         self.branchNames = [
-          'Flag_BadChargedCandidateFilter',
-          'Flag_BadGlobalMuon',
-          'Flag_BadPFMuonFilter',
-          'Flag_CloneGlobalMuon',
+          'Flag_ecalBadCalibFilterV2',
         ]
 
     def getOutputBranchName(self, branchName):

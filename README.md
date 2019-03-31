@@ -73,7 +73,9 @@ if [ "$ERA" = "2016" ]; then
   NANO_MODULES_DATA="$NANO_MODULES_DATA,egammaId"
   NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_csvv2_${ERA},egammaId";
 elif [ "$ERA" == "2017" ]; then
-  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_csvv2_${ERA}";
+  NANO_MODULES_MC="$NANO_MODULES_MC,btagSF_csvv2_${ERA},flagTypeConverter";
+elif [ "$ERA" == "2018" ]; then
+  NANO_MODULES_MC="$NANO_MODULES_MC,flagTypeConverter";
 fi
 
 # decide which modules you need to run
@@ -96,7 +98,6 @@ Unused yet functional modules:
 - `lepJetVarBTagAll_${ERA}` -- the information is already saved during NanoAOD production and is actually more accurate due to superior lepton-to-jet matching;
 - `jetmetUncertainties${ERA}AK8Puppi` -- not relevant as long as we don't plan to recalibrate AK8 jets;
 - `btagSF_cmva_2016` -- b-tagging discriminator deprecated since 2017;
-- `flagTypeConverter`-- not relevant, unless running on `80x` datasets.
 
 ## Links
 
