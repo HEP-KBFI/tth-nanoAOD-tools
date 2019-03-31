@@ -4,6 +4,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import le
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
+from tthAnalysis.NanoAODTools.postprocessing.modules.jetIdxProducer import jetIdx
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_deep_2016, btagSF_deepFlav_2016, btagSF_csvv2_2016, btagSF_cmva_2016, \
                                                                                                btagSF_deep_2017, btagSF_deepFlav_2017, btagSF_csvv2_2017,                   \
                                                                                                btagSF_deep_2018, btagSF_deepFlav_2018
