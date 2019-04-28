@@ -8,29 +8,45 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 class countHistogramProducer(Module):
 
   def __init__(self, selection):
-    self.puWeightName       = 'puWeight'
-    self.puWeightName_up    = '%sUp' % self.puWeightName
-    self.puWeightName_down  = '%sDown' % self.puWeightName
-    self.genWeightName      = 'genWeight'
-    self.lheTHXWeightName   = 'LHEWeight_rwgt_12' # Corresponds to SM in THQ/THW samples
-    self.LHEPdfWeightName   = 'LHEPdfWeight'
-    self.LHEScaleWeightName = 'LHEScaleWeight'
-    self.nLHEPdfWeight      = 101
-    self.nLHEScaleWeight    = 9
+    self.puWeightName            = 'puWeight'
+    self.puWeightName_up         = '%sUp' % self.puWeightName
+    self.puWeightName_down       = '%sDown' % self.puWeightName
+    self.l1PrefireWeightName     = 'L1PreFiringWeight'
+    self.l1PrefireWeightNomName  = '%s_Nom' % self.l1PrefireWeightName
+    self.l1PrefireWeightUpName   = '%s_Up' % self.l1PrefireWeightName
+    self.l1PrefireWeightDownName = '%s_Dn' % self.l1PrefireWeightName
+    self.genWeightName           = 'genWeight'
+    self.lheTHXWeightName        = 'LHEWeight_rwgt_12' # Corresponds to SM in THQ/THW samples
+    self.LHEPdfWeightName        = 'LHEPdfWeight'
+    self.LHEScaleWeightName      = 'LHEScaleWeight'
+    self.nLHEPdfWeight           = 101
+    self.nLHEScaleWeight         = 9
 
     self.histograms = {
-      'Count'                      : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(1)',                                        },
-      'CountWeighted'              : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(sgn(gen) * PU(central,up,down) * LHE(tH))', },
-      'CountFullWeighted'          : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(gen * PU(central,up,down) * LHE(tH))',      },
-      'CountWeightedNoPU'          : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(sgn(gen) * LHE(th))',                       },
-      'CountFullWeightedNoPU'      : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen * LHE(th))',                            },
-      'CountPosWeight'             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen > 0)',                                  },
-      'CountNegWeight'             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen < 0)',                                  },
-      'CountWeightedLHEWeightPdf'  : {
+      'Count'                             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(1)',                                                         },
+      'CountWeighted'                     : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(sgn(gen) * PU(central,up,down) * LHE(tH))',                  },
+      'CountWeightedL1PrefireNom'         : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(sgn(gen) * PU(central,up,down) * LHE(tH) * L1Prefire(nom))', },
+      'CountWeightedL1Prefire'            : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(sgn(gen) * PU(central) * LHE(tH) * L1Prefire(nom,up,down))', },
+      'CountFullWeighted'                 : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(gen * PU(central,up,down) * LHE(tH))',                       },
+      'CountFullWeightedL1PrefireNom'     : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(gen * PU(central,up,down) * LHE(tH) * L1Prefire(nom))',      },
+      'CountFullWeightedL1Prefire'        : { 'bins' : 3, 'min' : -0.5, 'max' : 2.5, 'title' : 'sum(gen * PU(central) * LHE(tH) * L1Prefire(nom,up,down))',      },
+      'CountWeightedNoPU'                 : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(sgn(gen) * LHE(th))',                                        },
+      'CountWeightedNoPUL1PrefireNom'     : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(sgn(gen) * LHE(th) * L1Prefire(nom))',                       },
+      'CountFullWeightedNoPU'             : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen * LHE(th))',                                             },
+      'CountFullWeightedNoPUL1PrefireNom' : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen * LHE(th)) * L1Prefire(nom)',                            },
+      'CountPosWeight'                    : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen > 0)',                                                   },
+      'CountNegWeight'                    : { 'bins' : 1, 'min' :  0.,  'max' : 2.,  'title' : 'sum(gen < 0)',                                                   },
+      'CountWeightedLHEWeightPdf' : {
         'bins'  : self.nLHEPdfWeight,
         'min'   : -0.5,
         'max'   : self.nLHEPdfWeight - 0.5,
         'title' : 'sum(sgn(gen) * PU(central) * LHE(th) * LHE(pdf))',
+      },
+      'CountWeightedLHEWeightPdfL1PrefireNom' : {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(sgn(gen) * PU(central) * LHE(th) * LHE(pdf) * L1Prefire(nom))',
       },
       'CountWeightedLHEWeightPdfNoPU': {
         'bins'  : self.nLHEPdfWeight,
@@ -38,41 +54,83 @@ class countHistogramProducer(Module):
         'max'   : self.nLHEPdfWeight - 0.5,
         'title' : 'sum(sgn(gen) * LHE(th) * LHE(pdf))',
       },
-      'CountFullWeightedLHEWeightPdf'  : {
+      'CountWeightedLHEWeightPdfNoPUL1PrefireNom' : {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(sgn(gen) * LHE(th) * LHE(pdf) * L1Prefire(nom))',
+      },
+      'CountFullWeightedLHEWeightPdf' : {
         'bins'  : self.nLHEPdfWeight,
         'min'   : -0.5,
         'max'   : self.nLHEPdfWeight - 0.5,
         'title' : 'sum(gen * PU(central) * LHE(th) * LHE(pdf))',
       },
-      'CountFullWeightedLHEWeightPdfNoPU': {
+      'CountFullWeightedLHEWeightPdfL1PrefireNom' : {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(gen * PU(central) * LHE(th) * LHE(pdf) * L1Prefire(nom))',
+      },
+      'CountFullWeightedLHEWeightPdfNoPU' : {
         'bins'  : self.nLHEPdfWeight,
         'min'   : -0.5,
         'max'   : self.nLHEPdfWeight - 0.5,
         'title' : 'sum(gen * LHE(th) * LHE(pdf))',
       },
-      'CountWeightedLHEWeightScale': {
+      'CountFullWeightedLHEWeightPdfNoPUL1PrefireNom' : {
+        'bins'  : self.nLHEPdfWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEPdfWeight - 0.5,
+        'title' : 'sum(gen * LHE(th) * LHE(pdf) * L1Prefire(nom))',
+      },
+      'CountWeightedLHEWeightScale' : {
         'bins'  : self.nLHEScaleWeight,
         'min'   : -0.5,
         'max'   : self.nLHEScaleWeight - 0.5,
         'title' : 'sum(sgn(gen) * PU(central) * LHE(th) * LHE(scale))',
       },
-      'CountWeightedLHEWeightScaleNoPU': {
+      'CountWeightedLHEWeightScaleL1PrefireNom' : {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(sgn(gen) * PU(central) * LHE(th) * LHE(scale) * L1Prefire(nom))',
+      },
+      'CountWeightedLHEWeightScaleNoPU' : {
         'bins'  : self.nLHEScaleWeight,
         'min'   : -0.5,
         'max'   : self.nLHEScaleWeight - 0.5,
         'title' : 'sum(sgn(gen) * LHE(th) * LHE(scale))',
       },
-      'CountFullWeightedLHEWeightScale': {
+      'CountWeightedLHEWeightScaleNoPUL1PrefireNom' : {
+        'bins': self.nLHEScaleWeight,
+        'min': -0.5,
+        'max': self.nLHEScaleWeight - 0.5,
+        'title': 'sum(sgn(gen) * LHE(th) * LHE(scale) * L1Prefire(nom))',
+      },
+      'CountFullWeightedLHEWeightScale' : {
         'bins'  : self.nLHEScaleWeight,
         'min'   : -0.5,
         'max'   : self.nLHEScaleWeight - 0.5,
         'title' : 'sum(gen * PU(central) * LHE(th) * LHE(scale))',
       },
-      'CountFullWeightedLHEWeightScaleNoPU': {
+      'CountFullWeightedLHEWeightScaleL1PrefireNom' : {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(gen * PU(central) * LHE(th) * LHE(scale) * L1Prefire(nom))',
+      },
+      'CountFullWeightedLHEWeightScaleNoPU' : {
         'bins'  : self.nLHEScaleWeight,
         'min'   : -0.5,
         'max'   : self.nLHEScaleWeight - 0.5,
         'title' : 'sum(gen * LHE(th) * LHE(scale))',
+      },
+      'CountFullWeightedLHEWeightScaleNoPUL1PrefireNom': {
+        'bins'  : self.nLHEScaleWeight,
+        'min'   : -0.5,
+        'max'   : self.nLHEScaleWeight - 0.5,
+        'title' : 'sum(gen * LHE(th) * LHE(scale) * L1Prefire(nom))',
       },
     }
 
@@ -133,6 +191,14 @@ class countHistogramProducer(Module):
         self.initHistograms(['Count'])
       self.histograms['Count']['histogram'].Fill(1, 1)
 
+    has_l1Prefire = hasattr(event, self.l1PrefireWeightNomName) and \
+                    hasattr(event, self.l1PrefireWeightUpName)  and \
+                    hasattr(event, self.l1PrefireWeightDownName)
+    if has_l1Prefire:
+      l1_nom  = getattr(event, self.l1PrefireWeightNomName)
+      l1_up   = getattr(event, self.l1PrefireWeightUpName)
+      l1_down = getattr(event, self.l1PrefireWeightDownName)
+
     if hasattr(event, self.genWeightName):
       genWeight = getattr(event, self.genWeightName)
       genWeight_sign = np.sign(genWeight)
@@ -185,6 +251,45 @@ class countHistogramProducer(Module):
           if not self.isInitialized(['CountFullWeightedNoPU']):
             self.initHistograms(['CountFullWeightedNoPU'])
           self.histograms['CountFullWeightedNoPU']['histogram'].Fill(0., genWeight * lheTHXWeight)
+        
+        if has_l1Prefire:
+          if 'histogram' in self.histograms['CountWeightedL1PrefireNom']:
+            if not self.isInitialized(['CountWeightedL1PrefireNom']):
+              self.initHistograms(['CountWeightedL1PrefireNom'])
+            self.histograms['CountWeightedL1PrefireNom']['histogram'].Fill(0., genWeight_sign * puWeight * lheTHXWeight * l1_nom)
+            self.histograms['CountWeightedL1PrefireNom']['histogram'].Fill(1., genWeight_sign * puWeight_up * lheTHXWeight * l1_nom)
+            self.histograms['CountWeightedL1PrefireNom']['histogram'].Fill(2., genWeight_sign * puWeight_down * lheTHXWeight * l1_nom)
+          
+          if 'histogram' in self.histograms['CountWeightedL1Prefire']:
+            if not self.isInitialized(['CountWeightedL1Prefire']):
+              self.initHistograms(['CountWeightedL1Prefire'])
+            self.histograms['CountWeightedL1Prefire']['histogram'].Fill(0., genWeight_sign * puWeight * lheTHXWeight * l1_nom)
+            self.histograms['CountWeightedL1Prefire']['histogram'].Fill(1., genWeight_sign * puWeight * lheTHXWeight * l1_up)
+            self.histograms['CountWeightedL1Prefire']['histogram'].Fill(2., genWeight_sign * puWeight * lheTHXWeight * l1_down)
+          
+          if 'histogram' in self.histograms['CountFullWeightedL1PrefireNom']:
+            if not self.isInitialized(['CountFullWeightedL1PrefireNom']):
+              self.initHistograms(['CountFullWeightedL1PrefireNom'])
+            self.histograms['CountFullWeightedL1PrefireNom']['histogram'].Fill(0., genWeight * puWeight * lheTHXWeight * l1_nom)
+            self.histograms['CountFullWeightedL1PrefireNom']['histogram'].Fill(1., genWeight * puWeight_up * lheTHXWeight * l1_nom)
+            self.histograms['CountFullWeightedL1PrefireNom']['histogram'].Fill(2., genWeight * puWeight_down * lheTHXWeight * l1_nom)
+
+          if 'histogram' in self.histograms['CountFullWeightedL1Prefire']:
+            if not self.isInitialized(['CountFullWeightedL1Prefire']):
+              self.initHistograms(['CountFullWeightedL1Prefire'])
+            self.histograms['CountFullWeightedL1Prefire']['histogram'].Fill(0., genWeight * puWeight * lheTHXWeight * l1_nom)
+            self.histograms['CountFullWeightedL1Prefire']['histogram'].Fill(1., genWeight * puWeight * lheTHXWeight * l1_up)
+            self.histograms['CountFullWeightedL1Prefire']['histogram'].Fill(2., genWeight * puWeight * lheTHXWeight * l1_down)
+          
+          if 'histogram' in self.histograms['CountWeightedNoPUL1PrefireNom']:
+            if not self.isInitialized(['CountWeightedNoPUL1PrefireNom']):
+              self.initHistograms(['CountWeightedNoPUL1PrefireNom'])
+            self.histograms['CountWeightedNoPUL1PrefireNom']['histogram'].Fill(0., genWeight_sign * lheTHXWeight * l1_nom)
+          
+          if 'histogram' in self.histograms['CountFullWeightedNoPUL1PrefireNom']:
+            if not self.isInitialized(['CountFullWeightedNoPUL1PrefireNom']):
+              self.initHistograms(['CountFullWeightedNoPUL1PrefireNom'])
+            self.histograms['CountFullWeightedNoPUL1PrefireNom']['histogram'].Fill(0., genWeight * lheTHXWeight * l1_nom)
 
         if hasattr(event, self.LHEPdfWeightName):
           LHEPdfWeight = getattr(event, self.LHEPdfWeightName)
@@ -225,6 +330,38 @@ class countHistogramProducer(Module):
               self.histograms['CountFullWeightedLHEWeightPdfNoPU']['histogram'].Fill(
                 float(lhe_pdf_idx), genWeight * lheTHXWeight * self.clip(LHEPdfWeight[lhe_pdf_idx])
               )
+          
+          if has_l1Prefire:
+            if 'histogram' in self.histograms['CountWeightedLHEWeightPdfL1PrefireNom']:
+              if not self.isInitialized(['CountWeightedLHEWeightPdfL1PrefireNom']):
+                self.initHistograms(['CountWeightedLHEWeightPdfL1PrefireNom'], self.nLHEPdfWeight)
+              for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                self.histograms['CountWeightedLHEWeightPdfL1PrefireNom']['histogram'].Fill(
+                  float(lhe_pdf_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx])
+                )
+            if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom']:
+              if not self.isInitialized(['CountFullWeightedLHEWeightPdfL1PrefireNom']):
+                self.initHistograms(['CountFullWeightedLHEWeightPdfL1PrefireNom'], self.nLHEPdfWeight)
+              for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom']['histogram'].Fill(
+                  float(lhe_pdf_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx])
+                )
+
+            if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom']:
+              if not self.isInitialized(['CountWeightedLHEWeightPdfNoPUL1PrefireNom']):
+                self.initHistograms(['CountWeightedLHEWeightPdfNoPUL1PrefireNom'], self.nLHEPdfWeight)
+              for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom']['histogram'].Fill(
+                  float(lhe_pdf_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx])
+                )
+            if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom']:
+              if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom']):
+                self.initHistograms(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom'], self.nLHEPdfWeight)
+              for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom']['histogram'].Fill(
+                  float(lhe_pdf_idx), genWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx])
+                )
+          
         else:
           if not self.isPrinted[self.LHEPdfWeightName]:
             self.isPrinted[self.LHEPdfWeightName] = True
@@ -269,6 +406,38 @@ class countHistogramProducer(Module):
               self.histograms['CountFullWeightedLHEWeightScaleNoPU']['histogram'].Fill(
                 float(lhe_scale_idx), genWeight * lheTHXWeight * self.clip(LHEScaleWeight[lhe_scale_idx])
               )
+          
+          if has_l1Prefire:
+            if 'histogram' in self.histograms['CountWeightedLHEWeightScaleL1PrefireNom']:
+              if not self.isInitialized(['CountWeightedLHEWeightScaleL1PrefireNom']):
+                self.initHistograms(['CountWeightedLHEWeightScaleL1PrefireNom'], self.nLHEScaleWeight)
+              for lhe_scale_idx in range(self.nLHEScaleWeight):
+                self.histograms['CountWeightedLHEWeightScaleL1PrefireNom']['histogram'].Fill(
+                  float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx])
+                )
+            if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleL1PrefireNom']:
+              if not self.isInitialized(['CountFullWeightedLHEWeightScaleL1PrefireNom']):
+                self.initHistograms(['CountFullWeightedLHEWeightScaleL1PrefireNom'], self.nLHEScaleWeight)
+              for lhe_scale_idx in range(self.nLHEScaleWeight):
+                self.histograms['CountFullWeightedLHEWeightScaleL1PrefireNom']['histogram'].Fill(
+                  float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx])
+                )
+
+            if 'histogram' in self.histograms['CountWeightedLHEWeightScaleNoPUL1PrefireNom']:
+              if not self.isInitialized(['CountWeightedLHEWeightScaleNoPUL1PrefireNom']):
+                self.initHistograms(['CountWeightedLHEWeightScaleNoPUL1PrefireNom'], self.nLHEScaleWeight)
+              for lhe_scale_idx in range(self.nLHEScaleWeight):
+                self.histograms['CountWeightedLHEWeightScaleNoPUL1PrefireNom']['histogram'].Fill(
+                  float(lhe_scale_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx])
+                )
+            if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom']:
+              if not self.isInitialized(['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom']):
+                self.initHistograms(['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom'], self.nLHEScaleWeight)
+              for lhe_scale_idx in range(self.nLHEScaleWeight):
+                self.histograms['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom']['histogram'].Fill(
+                  float(lhe_scale_idx), genWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx])
+                )
+            
         else:
           if not self.isPrinted[self.LHEScaleWeightName]:
             self.isPrinted[self.LHEScaleWeightName] = True
@@ -290,19 +459,33 @@ class countHistogramProducer(Module):
 all_histograms = [
   'Count',
   'CountWeighted',
+  'CountWeightedL1PrefireNom',
+  'CountWeightedL1Prefire',
   'CountWeightedNoPU',
+  'CountWeightedNoPUL1PrefireNom',
   'CountFullWeighted',
+  'CountFullWeightedL1PrefireNom',
+  'CountFullWeightedL1Prefire',
   'CountFullWeightedNoPU',
+  'CountFullWeightedNoPUL1PrefireNom',
   'CountPosWeight',
   'CountNegWeight',
   'CountWeightedLHEWeightPdf',
+  'CountWeightedLHEWeightPdfL1PrefireNom',
   'CountWeightedLHEWeightPdfNoPU',
+  'CountWeightedLHEWeightPdfNoPUL1PrefireNom',
   'CountFullWeightedLHEWeightPdf',
+  'CountFullWeightedLHEWeightPdfL1PrefireNom',
   'CountFullWeightedLHEWeightPdfNoPU',
+  'CountFullWeightedLHEWeightPdfNoPUL1PrefireNom',
   'CountWeightedLHEWeightScale',
+  'CountWeightedLHEWeightScaleL1PrefireNom',
   'CountWeightedLHEWeightScaleNoPU',
+  'CountWeightedLHEWeightScaleNoPUL1PrefireNom',
   'CountFullWeightedLHEWeightScale',
+  'CountFullWeightedLHEWeightScaleL1PrefireNom',
   'CountFullWeightedLHEWeightScaleNoPU',
+  'CountFullWeightedLHEWeightScaleNoPUL1PrefireNom',
 ]
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
