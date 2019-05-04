@@ -16,7 +16,9 @@ class countHistogramProducer(Module):
     self.l1PrefireWeightUpName   = '%s_Up' % self.l1PrefireWeightName
     self.l1PrefireWeightDownName = '%s_Dn' % self.l1PrefireWeightName
     self.genWeightName           = 'genWeight'
-    self.lheTHXWeightName        = 'LHEWeight_rwgt_12' # Corresponds to SM in THQ/THW samples
+    self.lheTHXWeightName        = 'LHEReweightingWeight'
+    self.lheTHXWeightCountName   = 'n%s' % self.lheTHXWeightName
+    self.lheTHXSMWeightIndex     = 11 # 12th value
     self.LHEPdfWeightName        = 'LHEPdfWeight'
     self.LHEScaleWeightName      = 'LHEScaleWeight'
     self.nLHEPdfWeight           = 101
@@ -216,12 +218,17 @@ class countHistogramProducer(Module):
         assert(hasattr(event, self.puWeightName_up))
         assert(hasattr(event, self.puWeightName_down))
 
-        if hasattr(event, self.lheTHXWeightName):
-          lheTHXWeight = getattr(event, self.lheTHXWeightName)
-        else:
+        has_lhe = False
+        if hasattr(event, self.lheTHXWeightCountName) and hasattr(event, self.lheTHXWeightName):
+          nofLheTHXWeights = getattr(event, self.lheTHXWeightCountName)
+          if self.lheTHXSMWeightIndex < nofLheTHXWeights:
+            lheTHXWeightArr = getattr(event, self.lheTHXWeightName)
+            lheTHXWeight = lheTHXWeightArr[self.lheTHXSMWeightIndex]
+            has_lhe = True
+        if not has_lhe:
           if not self.isPrinted[self.lheTHXWeightName]:
             self.isPrinted[self.lheTHXWeightName] = True
-            print('Missing branch: %s' % self.lheTHXWeightName)
+            print('Missing or unfilled branch: %s' % self.lheTHXWeightName)
           lheTHXWeight = 1.
 
         puWeight = getattr(event, self.puWeightName)
