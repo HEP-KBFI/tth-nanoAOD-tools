@@ -8,6 +8,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import 
 
 import collections
 import logging
+import copy
 
 class GenPartAuxAug(GenPartAux):
   def __init__(self, genPart, idx, massTable):
@@ -99,7 +100,7 @@ class genMatchCollectionProducer(Module):
         if recoObj.genPartIdx in genParts:
           genPart = genParts[recoObj.genPartIdx]
           genPart.genPartFlav = recoObj.genPartFlav
-          recoGenMatches[recoObjBr].append(genPart)
+          recoGenMatches[recoObjBr].append(copy.deepcopy(genPart))
           genMatchIdxs[recoObjBr].append(nof_genMatches)
           nof_genMatches += 1
         else:
@@ -113,7 +114,7 @@ class genMatchCollectionProducer(Module):
     }
     for jet in jets:
       if jet.genJetIdx in genJets:
-        recoGenMatches[self.jtBr].append(genJets[jet.genJetIdx])
+        recoGenMatches[self.jtBr].append(copy.deepcopy(genJets[jet.genJetIdx]))
         genMatchIdxs[self.jtBr].append(nof_genMatches)
         nof_genMatches += 1
       else:
