@@ -67,7 +67,7 @@ SAMPLE_NAME=effectively_histogram_name
 # set up modules for data and MC
 NANO_MODULES_DATA="absIso,tauIDLog,jetSubstructureObservablesHTTv2,trigObjMatcher"
 NANO_MODULES_MC="$NANO_MODULES_DATA,genHiggsDecayMode,genAll,puWeight${ERA}($PILEUP;$SAMPLE_NAME),\
-jetmetUncertainties${ERA},btagSF_deep_${ERA},btagSF_deepFlav_${ERA}"
+jetIdx,genMatchCollection,jetmetUncertainties${ERA},btagSF_deep_${ERA},btagSF_deepFlav_${ERA}"
 
 if [ "$ERA" = "2016" ]; then
   NANO_MODULES_DATA="$NANO_MODULES_DATA,egammaId"
