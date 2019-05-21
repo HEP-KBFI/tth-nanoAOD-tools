@@ -98,7 +98,6 @@ Unused yet functional modules:
 - `lepJetVarBTagAll_${ERA}` -- the information is already saved during NanoAOD production and is actually more accurate due to superior lepton-to-jet matching;
 - `jetmetUncertainties${ERA}AK8Puppi` -- not relevant as long as we don't plan to recalibrate AK8 jets;
 - `btagSF_cmva_2016` -- b-tagging discriminator deprecated since 2017;
-- `flagTypeConverter`-- not relevant, unless running on `80x` datasets.
 
 ## Links
 
