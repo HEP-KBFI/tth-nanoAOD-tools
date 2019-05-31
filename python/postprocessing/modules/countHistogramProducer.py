@@ -7,7 +7,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class countHistogramProducer(Module):
 
-  def __init__(self, selection):
+  def __init__(self):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -136,9 +136,7 @@ class countHistogramProducer(Module):
       },
     }
 
-    for histogramName in selection:
-      if histogramName not in self.histograms:
-        raise ValueError("Invalid histogram requested: %s" % histogramName)
+    for histogramName in self.histograms:
       self.histograms[histogramName]['histogram'] = None
 
     self.isPrinted = {
@@ -463,37 +461,5 @@ class countHistogramProducer(Module):
 
     return True
 
-all_histograms = [
-  'Count',
-  'CountWeighted',
-  'CountWeightedL1PrefireNom',
-  'CountWeightedL1Prefire',
-  'CountWeightedNoPU',
-  'CountWeightedNoPUL1PrefireNom',
-  'CountFullWeighted',
-  'CountFullWeightedL1PrefireNom',
-  'CountFullWeightedL1Prefire',
-  'CountFullWeightedNoPU',
-  'CountFullWeightedNoPUL1PrefireNom',
-  'CountPosWeight',
-  'CountNegWeight',
-  'CountWeightedLHEWeightPdf',
-  'CountWeightedLHEWeightPdfL1PrefireNom',
-  'CountWeightedLHEWeightPdfNoPU',
-  'CountWeightedLHEWeightPdfNoPUL1PrefireNom',
-  'CountFullWeightedLHEWeightPdf',
-  'CountFullWeightedLHEWeightPdfL1PrefireNom',
-  'CountFullWeightedLHEWeightPdfNoPU',
-  'CountFullWeightedLHEWeightPdfNoPUL1PrefireNom',
-  'CountWeightedLHEWeightScale',
-  'CountWeightedLHEWeightScaleL1PrefireNom',
-  'CountWeightedLHEWeightScaleNoPU',
-  'CountWeightedLHEWeightScaleNoPUL1PrefireNom',
-  'CountFullWeightedLHEWeightScale',
-  'CountFullWeightedLHEWeightScaleL1PrefireNom',
-  'CountFullWeightedLHEWeightScaleNoPU',
-  'CountFullWeightedLHEWeightScaleNoPUL1PrefireNom',
-]
-
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll = lambda : countHistogramProducer(all_histograms)
+countHistogramAll = lambda : countHistogramProducer()
