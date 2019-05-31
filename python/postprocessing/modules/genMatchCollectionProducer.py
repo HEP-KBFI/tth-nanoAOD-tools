@@ -89,8 +89,8 @@ class genMatchCollectionProducer(Module):
       for idx, part in enumerate(Collection(event, self.genPartBr))
     }
 
-    recoGenMatches    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
-    genMatchIdxs    = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
+    recoGenMatches = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
+    genMatchIdxs   = { recoObjBr : [] for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ] }
 
     for recoObjBr in [ self.muBr, self.elBr, self.taBr ]:
       recoCollection = Collection(event, recoObjBr)
