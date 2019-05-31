@@ -8,7 +8,6 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.genParticleProducer import 
 
 import collections
 import logging
-import copy
 
 class GenPartAuxAug(GenPartAux):
   def __init__(self, genPart, idx, massTable):
@@ -98,9 +97,7 @@ class genMatchCollectionProducer(Module):
 
       for recoObj in recoCollection:
         if recoObj.genPartIdx in genParts:
-          genPart = genParts[recoObj.genPartIdx]
-          genPart.genPartFlav = recoObj.genPartFlav
-          recoGenMatches[recoObjBr].append(copy.deepcopy(genPart))
+          recoGenMatches[recoObjBr].append((recoObj.genPartIdx, recoObj.genPartFlav))
           genMatchIdxs[recoObjBr].append(nof_genMatches)
           nof_genMatches += 1
         else:
@@ -114,7 +111,7 @@ class genMatchCollectionProducer(Module):
     }
     for jet in jets:
       if jet.genJetIdx in genJets:
-        recoGenMatches[self.jtBr].append(copy.deepcopy(genJets[jet.genJetIdx]))
+        recoGenMatches[self.jtBr].append((jet.genJetIdx, 0))
         genMatchIdxs[self.jtBr].append(nof_genMatches)
         nof_genMatches += 1
       else:
@@ -123,7 +120,13 @@ class genMatchCollectionProducer(Module):
     for recoObjBr in [ self.muBr, self.elBr, self.taBr, self.jtBr ]:
       genCollectionName = '{}GenMatch'.format(recoObjBr)
       for genVar in self.genVars:
-        genVarArr = map(lambda genObj: getattr(genObj, genVar), recoGenMatches[recoObjBr])
+        if genVar != 'genPartFlav':
+          if recoObjBr != self.jtBr:
+            genVarArr = map(lambda genObj: getattr(genParts[genObj[0]], genVar), recoGenMatches[recoObjBr])
+          else:
+            genVarArr = map(lambda genObj: getattr(genJets[genObj[0]], genVar), recoGenMatches[recoObjBr])
+        else:
+          genVarArr = map(lambda genObj: genObj[1], recoGenMatches[recoObjBr])
         self.out.fillBranch('{}_{}'.format(genCollectionName, genVar), genVarArr)
       self.out.fillBranch('{}_genMatchIdx'.format(recoObjBr), genMatchIdxs[recoObjBr])
 
