@@ -55,3 +55,5 @@ tHweights = cms.VPSet(
   cms.PSet(kt = cms.double(2.0),   kv = cms.double(0.5), idx = cms.uint32(48)),
   cms.PSet(kt = cms.double(3.0),   kv = cms.double(0.5), idx = cms.uint32(49)),
 )
+
+thIdxs = [ coupling.idx.value() for coupling in tHweights if coupling.kv == 1.0 ]
