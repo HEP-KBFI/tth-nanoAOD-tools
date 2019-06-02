@@ -6,7 +6,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
-from tthAnalysis.NanoAODTools.tHweights_cff import thIdxs
+from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
 class countHistogramProducer(Module):
 
