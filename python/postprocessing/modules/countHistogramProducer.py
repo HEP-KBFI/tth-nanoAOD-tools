@@ -6,7 +6,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
-from tthAnalysis.NanoAODTools.tHweights_cfi import tHweights
+from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
 class countHistogramProducer(Module):
 
@@ -46,7 +46,7 @@ class countHistogramProducer(Module):
       #   'title' : 'sum(gen < 0)',
       # }),
     ])
-    self.lheTHXSMWeightIndices = [ coupling.idx.value() for coupling in tHweights ]
+    self.lheTHXSMWeightIndices = thIdxs
 
     for lheTHXSMWeightIndex in self.lheTHXSMWeightIndices:
       do_tH = lheTHXSMWeightIndex >= 0

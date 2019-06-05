@@ -77,6 +77,9 @@ for tHweight in tHweights:
   tHweight.xs_tHW = cms.double(get_tHW_sf(kt_over_kv, KV_NORM))
   tHweight.xs_ttH = cms.double(get_ttH_sf(kt_over_kv, KV_NORM))
 
+# final choice (determined by the indices to the reweighting branch)
+thIdxs = [ coupling.idx.value() for coupling in tHweights ]
+
 def find_tHweight(tHweights, idx):
   requried_entry = [ entry for entry in tHweights if entry.idx.value() == idx ]
   if len(requried_entry) == 0:
