@@ -8,6 +8,9 @@ def get_tHq_sf(kt_over_kv, kv):
 def get_tHW_sf(kt_over_kv, kv):
   return 1.0 if kt_over_kv == 1.0 and kv == 1.0 else kv**2 * (2.91 * kt_over_kv**2 + 2.31 - 4.22 * kt_over_kv)
 
+def get_ttH_sf(kt_over_kv, kv):
+  return 1.0
+
 tHweights = cms.VPSet(
   cms.PSet(kt = cms.double(-1.0),  kv = cms.double(1.0), idx = cms.int32(-1)), # the default (i.e. no weight)
   # 16 weights
@@ -72,3 +75,12 @@ for tHweight in tHweights:
   kt_over_kv = kt / kv
   tHweight.xs_tHq = cms.double(get_tHq_sf(kt_over_kv, KV_NORM))
   tHweight.xs_tHW = cms.double(get_tHW_sf(kt_over_kv, KV_NORM))
+  tHweight.xs_ttH = cms.double(get_ttH_sf(kt_over_kv, KV_NORM))
+
+def find_tHweight(tHweights, idx):
+  requried_entry = [ entry for entry in tHweights if entry.idx.value() == idx ]
+  if len(requried_entry) == 0:
+    raise RuntimeError("No weights found for index: %d" % idx)
+  elif len(requried_entry) > 1:
+    raise RuntimeError("Multiple weights found for index %d" % idx)
+  return requried_entry[0]
