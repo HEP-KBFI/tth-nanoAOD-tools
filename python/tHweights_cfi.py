@@ -1,16 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-KV_NORM = 1.0
-
-def get_tHq_sf(kt_over_kv, kv):
-  return 1.0 if kt_over_kv == 1.0 and kv == 1.0 else kv**2 * (2.63 * kt_over_kv**2 + 3.588 - 5.21 * kt_over_kv)
-
-def get_tHW_sf(kt_over_kv, kv):
-  return 1.0 if kt_over_kv == 1.0 and kv == 1.0 else kv**2 * (2.91 * kt_over_kv**2 + 2.31 - 4.22 * kt_over_kv)
-
-def get_ttH_sf(kt_over_kv, kv):
-  return 1.0
-
 tHweights = cms.VPSet(
   cms.PSet(kt = cms.double(-1.0),  kv = cms.double(1.0), idx = cms.int32(-1)), # the default (i.e. no weight)
   # 16 weights
@@ -68,14 +57,6 @@ tHweights = cms.VPSet(
   cms.PSet(kt = cms.double(3.0),   kv = cms.double(0.5), idx = cms.int32(49)),
   # verdict: 16 + 10 + 6 = 32 pairs of kt and kv with unique kt / kv ratio
 )
-
-for tHweight in tHweights:
-  kt = tHweight.kt.value()
-  kv = tHweight.kv.value()
-  kt_over_kv = kt / kv
-  tHweight.xs_tHq = cms.double(get_tHq_sf(kt_over_kv, KV_NORM))
-  tHweight.xs_tHW = cms.double(get_tHW_sf(kt_over_kv, KV_NORM))
-  tHweight.xs_ttH = cms.double(get_ttH_sf(kt_over_kv, KV_NORM))
 
 # final choice (determined by the indices to the reweighting branch)
 thIdxs = [ coupling.idx.value() for coupling in tHweights ]
