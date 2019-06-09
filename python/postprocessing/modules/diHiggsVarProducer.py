@@ -118,22 +118,31 @@ class diHiggsVarProducer(Module):
       )
       print("Using %d points to scan" % self.nofWeightsScan)
 
+    normFile = os.path.join(cmssw_base, "Support/NonResonant/Distros_5p_SM3M_sumBenchJHEP_13TeV_19-4.root")
+    normHist = "H1bin4"
     self.nofWeightsBM = 13
-    self.klJHEP   = [ 1.0,     7.5,     1.0,     1.0,    -3.5,     1.0,     2.4,     5.0,    15.0,     1.0,    10.0,     2.4,    15.0     ]
-    self.ktJHEP   = [ 1.0,     1.0,     1.0,     1.0,     1.5,     1.0,     1.0,     1.0,     1.0,     1.0,     1.5,     1.0,     1.0     ]
-    self.c2JHEP   = [ 0.0,    -1.0,     0.5,    -1.5,    -3.0,     0.0,     0.0,     0.0,     0.0,     1.0,    -1.0,     0.0,     1.0     ]
-    self.cgJHEP   = [ 0.0,     0.0,    -0.8,     0.0,     0.0,     0.8,     0.2,     0.2,    -1.0,    -0.6,     0.0,     1.0,     0.0     ]
-    self.c2gJHEP  = [ 0.0,     0.0,     0.6,    -0.8,     0.0,    -1.0,    -0.2,    -0.2,     1.0,     0.6,     0.0,    -1.0,     0.0     ]
-    self.normJHEP = [ 0.99997, 0.94266, 0.71436, 0.95608, 0.97897, 0.87823, 0.95781, 1.00669, 0.92494, 0.86083, 1.00658, 0.95096, 1.00063 ]
+    self.klJHEP   = [ 1.0,  7.5,  1.0,  1.0, -3.5,  1.0,  2.4,  5.0, 15.0,  1.0, 10.0,  2.4, 15.0 ]
+    self.ktJHEP   = [ 1.0,  1.0,  1.0,  1.0,  1.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.5,  1.0,  1.0 ]
+    self.c2JHEP   = [ 0.0, -1.0,  0.5, -1.5, -3.0,  0.0,  0.0,  0.0,  0.0,  1.0, -1.0,  0.0,  1.0 ]
+    self.cgJHEP   = [ 0.0,  0.0, -0.8,  0.0,  0.0,  0.8,  0.2,  0.2, -1.0, -0.6,  0.0,  1.0,  0.0 ]
+    self.c2gJHEP  = [ 0.0,  0.0,  0.6, -0.8,  0.0, -1.0, -0.2, -0.2,  1.0,  0.6,  0.0, -1.0,  0.0 ]
     assert(
       len(self.klJHEP)   == self.nofWeightsBM and
       len(self.ktJHEP)   == self.nofWeightsBM and
       len(self.c2JHEP)   == self.nofWeightsBM and
       len(self.cgJHEP)   == self.nofWeightsBM and
-      len(self.c2gJHEP)  == self.nofWeightsBM and
-      len(self.normJHEP) == self.nofWeightsBM
+      len(self.c2gJHEP)  == self.nofWeightsBM
     )
-    print("Using %d JHEP BMs" % self.nofWeightsBM)
+    self.normJHEP = []
+    if self.compute_weights:
+      assert(os.path.isfile(normFile))
+      for idx in range(self.nofWeightsBM):
+        normJHEPval = self.model.getNormalization(
+          self.klJHEP[idx], self.ktJHEP[idx], self.c2JHEP[idx], self.cgJHEP[idx], self.c2gJHEP[idx], normFile, normHist
+        )
+        self.normJHEP.append(normJHEPval)
+      assert(len(self.normJHEP) == self.nofWeightsBM)
+      print("Using %d JHEP BMs" % self.nofWeightsBM)
 
   def beginJob(self):
     pass
