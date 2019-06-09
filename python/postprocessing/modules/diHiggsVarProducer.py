@@ -165,8 +165,12 @@ class diHiggsVarProducer(Module):
 
       if nofHiggs_gen == 2:
         genHiggs_lead_p4, genHiggs_sublead_p4 = get_p4_pair(higgses_gen)
-        mHH_gen = (genHiggs_lead_p4 + genHiggs_sublead_p4).M()
-        cosThetaStar_gen = genHiggs_lead_p4.CosTheta()
+        genHiggs_pair_p4 = genHiggs_lead_p4 + genHiggs_sublead_p4
+        mHH_gen = genHiggs_pair_p4.M()
+
+        # boost leading or subleading Higgs -- doesn't matter
+        genHiggs_lead_p4.Boost(-genHiggs_pair_p4.BoostVector())
+        cosThetaStar_gen = abs(genHiggs_lead_p4.CosTheta())
         denominator = self.get_denominator(mHH_gen, cosThetaStar_gen)
 
         weightsBM_gen = []
@@ -213,8 +217,12 @@ class diHiggsVarProducer(Module):
 
       if nofHiggs_lhe == 2:
         lheHiggs_lead_p4, lheHiggs_sublead_p4 = get_p4_pair(higgses_lhe)
-        mHH_lhe = (lheHiggs_lead_p4 + lheHiggs_sublead_p4).M()
-        cosThetaStar_lhe = lheHiggs_lead_p4.CosTheta()
+        lheHiggs_pair_p4 = lheHiggs_lead_p4 + lheHiggs_sublead_p4
+        mHH_lhe = lheHiggs_pair_p4.M()
+
+        # boost leading or subleading Higgs -- doesn't matter
+        lheHiggs_lead_p4.Boost(-lheHiggs_pair_p4.BoostVector())
+        cosThetaStar_lhe = abs(lheHiggs_lead_p4.CosTheta())
         denominator = self.get_denominator(mHH_lhe, cosThetaStar_lhe)
 
         weightsBM_lhe = []
