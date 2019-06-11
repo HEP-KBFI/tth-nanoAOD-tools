@@ -197,9 +197,9 @@ class diHiggsVarProducer(Module):
           cost     = cosThetaStar,
           kl       = self.klJHEP[bmIdx],
           kt       = self.ktJHEP[bmIdx],
-          c2       = 0.,
-          cg       = 0.,
-          c2g      = 0.,
+          c2       = self.c2JHEP[bmIdx],
+          cg       = self.cgJHEP[bmIdx],
+          c2g      = self.c2gJHEP[bmIdx],
           effSumV0 = denominator,
           Cnorm    = self.normJHEP[bmIdx],
         )
@@ -208,17 +208,17 @@ class diHiggsVarProducer(Module):
     weightsScan = [ 0. ] * self.nofWeightsScan
     if self.compute_weights:
       weightsScan = []
-      for bmIdx in range(self.nofWeightsScan):
+      for scanIdx in range(self.nofWeightsScan):
         weightScan = self.model.getScaleFactor(
           mhh      = mHH,
           cost     = cosThetaStar,
-          kl       = self.klScan[bmIdx],
-          kt       = self.ktScan[bmIdx],
-          c2       = 0.,
-          cg       = 0.,
-          c2g      = 0.,
+          kl       = self.klScan[scanIdx],
+          kt       = self.ktScan[scanIdx],
+          c2       = self.c2Scan[scanIdx],
+          cg       = self.cgScan[scanIdx],
+          c2g      = self.c2gScan[scanIdx],
           effSumV0 = denominator,
-          Cnorm    = self.Norm_klScan[bmIdx],
+          Cnorm    = self.Norm_klScan[scanIdx],
         )
         weightsScan.append(weightScan)
 
