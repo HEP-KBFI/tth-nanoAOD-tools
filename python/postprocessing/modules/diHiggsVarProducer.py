@@ -18,7 +18,7 @@ def get_p4_pair(higgsArr):
 
 class diHiggsVarProducer(Module):
 
-  def __init__(self, era, use_gen = True, use_lhe = True, compute_weights = False):
+  def __init__(self, era, use_lhe = True, use_gen = False, compute_weights = False):
     self.use_gen = use_gen
     self.use_lhe = use_lhe
     assert(self.use_gen or self.use_lhe)
