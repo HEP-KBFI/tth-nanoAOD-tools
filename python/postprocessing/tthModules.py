@@ -6,9 +6,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tau
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
 from tthAnalysis.NanoAODTools.postprocessing.modules.jetIdxProducer import jetIdx
 from tthAnalysis.NanoAODTools.postprocessing.modules.diHiggsVarProducer import diHiggsVar_2016, diHiggsVar_2017, diHiggsVar_2018
-from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_deep_2016, btagSF_deepFlav_2016, btagSF_csvv2_2016, btagSF_cmva_2016, \
-                                                                                               btagSF_deep_2017, btagSF_deepFlav_2017, btagSF_csvv2_2017,                   \
-                                                                                               btagSF_deep_2018, btagSF_deepFlav_2018
+from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import *
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
 from tthAnalysis.NanoAODTools.postprocessing.modules.binnedEventCountProducer import binnedEventCounter
