@@ -14,5 +14,4 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer impo
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017, puHist2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.egammaIdProducer import egammaId
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight2016, puWeight2017, puWeight2018
-from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import jetmetUncertainties2016,         jetmetUncertainties2017,         jetmetUncertainties2018, \
-                                                                                     jetmetUncertainties2016AK8Puppi, jetmetUncertainties2017AK8Puppi, jetmetUncertainties2018AK8Puppi
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import *
