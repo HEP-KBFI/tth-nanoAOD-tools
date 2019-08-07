@@ -56,6 +56,25 @@ tHweights = cms.VPSet(
   cms.PSet(kt = cms.double(2.0),   kv = cms.double(0.5), idx = cms.int32(48)),
   cms.PSet(kt = cms.double(3.0),   kv = cms.double(0.5), idx = cms.int32(49)),
   # verdict: 16 + 10 + 6 = 32 pairs of kt and kv with unique kt / kv ratio
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-1.1111),  cosa = cms.double(-0.9),    idx = cms.int32(50)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-1.25),    cosa = cms.double(-0.8),    idx = cms.int32(51)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-1.42857), cosa = cms.double(-0.7),    idx = cms.int32(52)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-1.6667),  cosa = cms.double(-0.6),    idx = cms.int32(53)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-2.0),     cosa = cms.double(-0.5),    idx = cms.int32(54)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-2.5),     cosa = cms.double(-0.4),    idx = cms.int32(55)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-3.333),   cosa = cms.double(-0.3),    idx = cms.int32(56)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-5.0),     cosa = cms.double(-0.2),    idx = cms.int32(57)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-10.0),    cosa = cms.double(-0.1),    idx = cms.int32(58)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(-10000),   cosa = cms.double(-0.0001), idx = cms.int32(59)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(10.0),     cosa = cms.double(0.1),     idx = cms.int32(60)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(5.0),      cosa = cms.double(0.2),     idx = cms.int32(61)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(3.333),    cosa = cms.double(0.3),     idx = cms.int32(62)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(2.5),      cosa = cms.double(0.4),     idx = cms.int32(63)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(2.0),      cosa = cms.double(0.5),     idx = cms.int32(64)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(1.6667),   cosa = cms.double(0.6),     idx = cms.int32(65)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(1.42857),  cosa = cms.double(0.7),     idx = cms.int32(66)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(1.25),     cosa = cms.double(0.8),     idx = cms.int32(67)), # kt = -1 in the MG cards
+  cms.PSet(kt = cms.double(1.0), kv = cms.double(1.1111),   cosa = cms.double(0.9),     idx = cms.int32(68)), # kt = -1 in the MG cards
 )
 
 # final choice (determined by the indices to the reweighting branch)
