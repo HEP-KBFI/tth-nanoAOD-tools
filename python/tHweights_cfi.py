@@ -78,7 +78,8 @@ tHweights = cms.VPSet(
 )
 
 # final choice (determined by the indices to the reweighting branch)
-thIdxs = [ coupling.idx.value() for coupling in tHweights ]
+thIdxs     = [ coupling.idx.value() for coupling in tHweights ]
+thIdxsNoCP = [ coupling.idx.value() for coupling in tHweights if not hasattr(coupling, 'cosa') ]
 
 def find_tHweight(tHweights, idx):
   requried_entry = [ entry for entry in tHweights if entry.idx.value() == idx ]
