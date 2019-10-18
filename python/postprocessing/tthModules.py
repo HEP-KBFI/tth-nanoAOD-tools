@@ -16,4 +16,8 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer impo
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017, puHist2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.egammaIdProducer import egammaId
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight2016, puWeight2017, puWeight2018
-from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetUncertainties import *
+from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
+
+jetmetUncertainties2016All = createJMECorrector(dataYear = 2016, jesUncert = "All")
+jetmetUncertainties2017All = createJMECorrector(dataYear = 2017, jesUncert = "All")
+jetmetUncertainties2018All = createJMECorrector(dataYear = 2018, jesUncert = "All")
