@@ -19,5 +19,5 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer im
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 
 jetmetUncertainties2016All = createJMECorrector(dataYear = 2016, jesUncert = "All")
-jetmetUncertainties2017All = createJMECorrector(dataYear = 2017, jesUncert = "All")
+jetmetUncertainties2017All = createJMECorrector(dataYear = 2017, jesUncert = "All", metBranchName = "MET")
 jetmetUncertainties2018All = createJMECorrector(dataYear = 2018, jesUncert = "All")
