@@ -10,7 +10,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBran
                                                                                                btagSF_deep_2017, btagSF_deepFlav_2017, btagSF_csvv2_2017,                   \
                                                                                                btagSF_deep_2018, btagSF_deepFlav_2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
-from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll
+from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll, countHistogramAllCompTopRwgt
 from tthAnalysis.NanoAODTools.postprocessing.modules.binnedEventCountProducer import binnedEventCounter
 from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer import trigObjMatcher
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017, puHist2018
