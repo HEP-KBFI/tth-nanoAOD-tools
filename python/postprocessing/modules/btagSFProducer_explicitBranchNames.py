@@ -30,7 +30,9 @@ btagSF_deep_2017     = lambda : btagSFProducer_explicitBranchNames('2017', 'deep
 btagSF_deepFlav_2017 = lambda : btagSFProducer_explicitBranchNames('2017', 'deepjet')
 btagSF_csvv2_2017    = lambda : btagSFProducer_explicitBranchNames('2017', 'csvv2') # legacy
 
-btagSF_deep_2016     = lambda : btagSFProducer_explicitBranchNames('2016', 'deepcsv')
-btagSF_deepFlav_2016 = lambda : btagSFProducer_explicitBranchNames('2016', 'deepjet')
-btagSF_csvv2_2016    = lambda : btagSFProducer_explicitBranchNames('2016', 'csvv2') # legacy
-btagSF_cmva_2016     = lambda : btagSFProducer_explicitBranchNames('2016', 'cmva') # legacy
+btagSF_deep_2016_TuneCP5     = lambda : btagSFProducer_explicitBranchNames('2016_TuneCP5', 'deepcsv')
+btagSF_deepFlav_2016_TuneCP5 = lambda : btagSFProducer_explicitBranchNames('2016_TuneCP5', 'deepjet')
+btagSF_deep_2016             = lambda : btagSFProducer_explicitBranchNames('2016',         'deepcsv')
+btagSF_deepFlav_2016         = lambda : btagSFProducer_explicitBranchNames('2016',         'deepjet')
+btagSF_csvv2_2016            = lambda : btagSFProducer_explicitBranchNames('2016',         'csvv2') # legacy
+btagSF_cmva_2016             = lambda : btagSFProducer_explicitBranchNames('2016',         'cmva') # legacy
