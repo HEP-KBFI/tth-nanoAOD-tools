@@ -24,8 +24,15 @@ class countHistogramProducer(Module):
     self.lheTHXWeightCountName   = 'n%s' % self.lheTHXWeightName
     self.LHEPdfWeightName        = 'LHEPdfWeight'
     self.LHEScaleWeightName      = 'LHEScaleWeight'
+    self.LHEEnvelopeName         = 'LHEEnvelopeWeight'
+    self.LHEEnvelopeNameUp       = '%sUp' % self.LHEEnvelopeName
+    self.LHEEnvelopeNameDown     = '%sDown' % self.LHEEnvelopeName
     self.nLHEPdfWeight           = 101
     self.nLHEScaleWeight         = 9
+    self.nLHEEnvelope            = 2
+    self.nLHEEnvelope_required   = self.nLHEScaleWeight
+    self.LHEEnvelopeIdxs         = [ 0, 1, 3, 5, 7, 8 ] # 0/8 muR & muF down/up, 1/7 muR down/up, 3/5 muF down/up
+    self.compLHEEnvelope         = False
     self.compTopRwgt             = compTopRwgt
     self.topRwgtBranchName       = "topPtRwgt"
     self.genTopCollectionName    = "GenTop"
@@ -225,6 +232,18 @@ class countHistogramProducer(Module):
           #   'max'   : self.nLHEScaleWeight - 0.5,
           #   'title' : 'sum(gen{} * LHE(scale) * L1Prefire(nom))'.format(insert_title),
           # }),
+          ('CountWeightedLHEEnvelope{}'.format(insert_name), {
+            'bins'  : self.nLHEEnvelope,
+            'min'   : -0.5,
+            'max'   : self.nLHEEnvelope - 0.5,
+            'title' : 'sum(sgn(gen) * PU(central){} * LHE(envelope up, down))'.format(insert_title),
+          }),
+          ('CountWeightedLHEEnvelopeL1PrefireNom{}'.format(insert_name), {
+            'bins'  : self.nLHEEnvelope,
+            'min'   : -0.5,
+            'max'   : self.nLHEEnvelope - 0.5,
+            'title' : 'sum(sgn(gen) * PU(central){} * LHE(envelope up, down) * L1Prefire(nom))'.format(insert_title),
+          }),
         ])
 
     for histogramName in self.histograms:
@@ -273,6 +292,12 @@ class countHistogramProducer(Module):
     b = -0.0005
     return np.exp(a + b * genTop_pt_avg)
 
+  def getLHEEnvelope(self, LHEScaleWeight):
+    if len(LHEScaleWeight) != self.nLHEEnvelope_required:
+      return (1., 1.)
+    LHEEnvelopeValues = [ self.clip(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs ]
+    return [ max(LHEEnvelopeValues), min(LHEEnvelopeValues) ]
+
   def beginJob(self):
     pass
 
@@ -283,6 +308,15 @@ class countHistogramProducer(Module):
     self.out = wrappedOutputTree
     if self.compTopRwgt:
       self.out.branch(self.topRwgtBranchName, "F")
+    inputTreeBranchNames = [ branch.GetName() for branch in inputTree.GetListOfBranches() ]
+    if self.LHEScaleWeightName in inputTreeBranchNames:
+      self.compLHEEnvelope = True
+    if self.compLHEEnvelope:
+      print("Computing LHE envelope weights")
+      self.out.branch(self.LHEEnvelopeNameUp,   "F")
+      self.out.branch(self.LHEEnvelopeNameDown, "F")
+    else:
+      print("NOT computing LHE envelope weights")
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     outputFile.cd()
@@ -307,6 +341,7 @@ class countHistogramProducer(Module):
       l1_down = getattr(event, self.l1PrefireWeightDownName)
 
     topRwgt = 1.
+    LHEEnvelopeValues = [ 1., 1. ]
     if self.compTopRwgt:
       genTops = Collection(event, self.genTopCollectionName)
       topRwgt = self.getTopRwgtSF(genTops)
@@ -498,7 +533,9 @@ class countHistogramProducer(Module):
                 print('Missing branch: %s' % self.LHEPdfWeightName)
 
             if hasattr(event, self.LHEScaleWeightName):
+              assert(self.compLHEEnvelope)
               LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
+              LHEEnvelopeValues = self.getLHEEnvelope(LHEScaleWeight)
 
               if len(LHEScaleWeight) != self.nLHEScaleWeight:
                 print(
@@ -567,6 +604,22 @@ class countHistogramProducer(Module):
                 #     self.histograms['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
                 #       float(lhe_scale_idx), genWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
                 #     )
+              
+              if 'histogram' in self.histograms['CountWeightedLHEEnvelope{}'.format(insert_name)]:
+                if not self.isInitialized(['CountWeightedLHEEnvelope{}'.format(insert_name)]):
+                  self.initHistograms(['CountWeightedLHEEnvelope{}'.format(insert_name)], self.nLHEEnvelope)
+                for lhe_scale_idx, lhe_scale_value in enumerate(LHEEnvelopeValues):
+                  self.histograms['CountWeightedLHEEnvelope{}'.format(insert_name)]['histogram'].Fill(
+                    float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * lhe_scale_value * topSF
+                  )
+              if has_l1Prefire:
+                if 'histogram' in self.histograms['CountWeightedLHEEnvelopeL1PrefireNom{}'.format(insert_name)]:
+                  if not self.isInitialized(['CountWeightedLHEEnvelopeL1PrefireNom{}'.format(insert_name)]):
+                    self.initHistograms(['CountWeightedLHEEnvelopeL1PrefireNom{}'.format(insert_name)], self.nLHEEnvelope)
+                  for lhe_scale_idx, lhe_scale_value in enumerate(LHEEnvelopeValues):
+                    self.histograms['CountWeightedLHEEnvelopeL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                      float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * lhe_scale_value * topSF
+                    )
 
             else:
               if not self.isPrinted[self.LHEScaleWeightName]:
@@ -585,6 +638,9 @@ class countHistogramProducer(Module):
 
     if self.compTopRwgt:
       self.out.fillBranch(self.topRwgtBranchName, topRwgt)
+    if self.compLHEEnvelope:
+      self.out.fillBranch(self.LHEEnvelopeNameUp, LHEEnvelopeValues[0])
+      self.out.fillBranch(self.LHEEnvelopeNameDown, LHEEnvelopeValues[1])
 
     return True
 
