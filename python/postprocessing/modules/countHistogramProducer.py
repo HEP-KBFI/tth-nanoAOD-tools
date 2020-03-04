@@ -20,6 +20,11 @@ class countHistogramProducer(Module):
     self.l1PrefireWeightUpName   = '%s_Up' % self.l1PrefireWeightName
     self.l1PrefireWeightDownName = '%s_Dn' % self.l1PrefireWeightName
     self.genWeightName           = 'genWeight'
+    self.PSWeightName            = 'PSWeight'
+    self.PSWeightCountName       = 'n%s' % self.PSWeightName
+    self.nPSWeight_required      = 4 # ISR down, FSR down, ISR up, FSR up
+    self.nPSweight               = self.nPSWeight_required + 2 # ISR+FSR up & down (envelope)
+    self.nominalLHEweightName    = 'LHEWeight_originalXWGTUP'
     self.lheTHXWeightName        = 'LHEReweightingWeight'
     self.lheTHXWeightCountName   = 'n%s' % self.lheTHXWeightName
     self.LHEPdfWeightName        = 'LHEPdfWeight'
@@ -36,6 +41,12 @@ class countHistogramProducer(Module):
     self.compTopRwgt             = compTopRwgt
     self.topRwgtBranchName       = "topPtRwgt"
     self.genTopCollectionName    = "GenTop"
+
+    self.ISR_down_idx = 0
+    self.FSR_down_idx = 1
+    self.ISR_up_idx = 2
+    self.FSR_up_idx = 3
+
     if self.compTopRwgt:
       print("Computing top reweighting: %s" % self.compTopRwgt)
     else:
@@ -244,6 +255,34 @@ class countHistogramProducer(Module):
             'max'   : self.nLHEEnvelope - 0.5,
             'title' : 'sum(sgn(gen) * PU(central){} * LHE(envelope up, down) * L1Prefire(nom))'.format(insert_title),
           }),
+          ('CountWeightedPSWeight{}'.format(insert_name), {
+            'bins': self.nPSweight,
+            'min': -0.5,
+            'max': self.nPSweight - 0.5,
+            'title': 'sum(sgn(gen) * PU(central){} * PS(ISR/FSR/both up, ISR/FSR/both down))'.format(insert_title),
+          }),
+          ('CountWeightedPSWeightL1PrefireNom{}'.format(insert_name), {
+            'bins': self.nPSweight,
+            'min': -0.5,
+            'max': self.nPSweight - 0.5,
+            'title': 'sum(sgn(gen) * PU(central){} * PS(ISR/FSR/both up, ISR/FSR/both down) * L1Prefire(nom))'.format(insert_title),
+          }),
+          # the PS weights may not average to 1 because of incorrect normalization, see
+          # https://hypernews.cern.ch/HyperNews/CMS/get/physTools/3709.html
+          # https://github.com/cms-nanoAOD/cmssw/issues/381
+          ('CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name), {
+            'bins': self.nPSweight,
+            'min': -0.5,
+            'max': self.nPSweight - 0.5,
+            'title': 'sum(sgn(gen) * PU(central){} * PS(ISR/FSR/both up, ISR/FSR/both down) * LHE(nom))'.format(insert_title),
+          }),
+          ('CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name), {
+            'bins': self.nPSweight,
+            'min': -0.5,
+            'max': self.nPSweight - 0.5,
+            'title': 'sum(sgn(gen) * PU(central){} * PS(ISR/FSR/both up, ISR/FSR/both down) * L1Prefire(nom) * LHE(nom))'.format(
+              insert_title),
+          }),
         ])
 
     for histogramName in self.histograms:
@@ -251,8 +290,8 @@ class countHistogramProducer(Module):
 
     self.isPrinted = {
       branchName : False for branchName in [
-        self.puWeightName, self.genWeightName, self.lheTHXWeightName,
-        self.LHEPdfWeightName, self.LHEScaleWeightName,
+        self.puWeightName, self.genWeightName, self.lheTHXWeightName, self.LHEPdfWeightName,
+        self.LHEScaleWeightName, self.PSWeightCountName, self.nominalLHEweightName,
       ]
     }
 
@@ -625,6 +664,63 @@ class countHistogramProducer(Module):
               if not self.isPrinted[self.LHEScaleWeightName]:
                 self.isPrinted[self.LHEScaleWeightName] = True
                 print('Missing branch: %s' % self.LHEScaleWeightName)
+
+            nof_PSweight = getattr(event, self.PSWeightCountName, 0)
+            if nof_PSweight == self.nPSWeight_required:
+              PSweights = getattr(event, self.PSWeightName)
+              assert(len(PSweights) == nof_PSweight)
+              # FSR and ISR may move in opposite directions -> just take min and max of the weights to build the envelope
+              PS_env_up = max([ PSweights[ps_idx] for ps_idx in range(nof_PSweight) ])
+              PS_env_down = min([ PSweights[ps_idx] for ps_idx in range(nof_PSweight) ])
+              # target: ISR/FSR/both up, ISR/FSR/both down
+              PSweights_ext = [
+                PSweights[self.ISR_up_idx],   PSweights[self.FSR_up_idx],   PS_env_up,
+                PSweights[self.ISR_down_idx], PSweights[self.FSR_down_idx], PS_env_down,
+              ]
+              assert(len(PSweights_ext) == self.nPSweight)
+              
+              if 'histogram' in self.histograms['CountWeightedPSWeight{}'.format(insert_name)]:
+                if not self.isInitialized(['CountWeightedPSWeight{}'.format(insert_name)]):
+                  self.initHistograms(['CountWeightedPSWeight{}'.format(insert_name)], self.nPSweight)
+                for psweight_idx, psweight in enumerate(PSweights_ext):
+                  self.histograms['CountWeightedPSWeight{}'.format(insert_name)]['histogram'].Fill(
+                    float(psweight_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip(psweight) * topSF
+                  )
+              if has_l1Prefire:
+                if 'histogram' in self.histograms['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)]:
+                  if not self.isInitialized(['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)]):
+                    self.initHistograms(['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)], self.nPSweight)
+                  for psweight_idx, psweight in enumerate(PSweights_ext):
+                    self.histograms['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                      float(psweight_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(psweight) * topSF
+                    )
+
+              if hasattr(event, self.nominalLHEweightName):
+                lhe_nom = getattr(event, self.nominalLHEweightName)
+                if 'histogram' in self.histograms['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)]:
+                  if not self.isInitialized(['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)]):
+                    self.initHistograms(['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)], self.nPSweight)
+                  for psweight_idx, psweight in enumerate(PSweights_ext):
+                    self.histograms['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)]['histogram'].Fill(
+                      float(psweight_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip(psweight * lhe_nom) * topSF
+                    )
+                if has_l1Prefire:
+                  if 'histogram' in self.histograms['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)]:
+                    if not self.isInitialized(['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)]):
+                      self.initHistograms(['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)], self.nPSweight)
+                    for psweight_idx, psweight in enumerate(PSweights_ext):
+                      self.histograms['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                        float(psweight_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(psweight * lhe_nom) * topSF
+                      )
+              else:
+                if not self.isPrinted[self.nominalLHEweightName]:
+                  self.isPrinted[self.nominalLHEweightName] = True
+                  print('Missing branch: %s' % self.nominalLHEweightName)
+
+            else:
+              if not self.isPrinted[self.PSWeightCountName]:
+                self.isPrinted[self.PSWeightCountName] = True
+                print('Missing branch: %s' % self.PSWeightCountName)
 
       else:
         if not self.isPrinted[self.puWeightName]:
