@@ -328,7 +328,7 @@ class countHistogramProducer(Module):
     genTop_neg_pt = genTops[genTop_neg_idx].pt
     genTop_pt_avg = (genTop_pos_pt + genTop_neg_pt) / 2.
     a = 0.058    # TOP-16-011: 0.0615
-    b = 0.000466 # TOP-16-011 -0.0005
+    b = -0.000466 # TOP-16-011 -0.0005
     return np.exp(a + b * genTop_pt_avg)
 
   def getLHEEnvelope(self, LHEScaleWeight):
