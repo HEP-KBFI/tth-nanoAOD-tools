@@ -47,6 +47,8 @@ class countHistogramProducer(Module):
     self.ISR_up_idx = 2
     self.FSR_up_idx = 3
 
+    self.topPtRwgtChoices = [ "TOP16011", "Linear", "Quadratic" ]
+
     if self.compTopRwgt:
       print("Computing top reweighting: %s" % self.compTopRwgt)
     else:
@@ -76,8 +78,9 @@ class countHistogramProducer(Module):
     self.topPtRwgtLabels = [ "" ]
     self.topPtRwgtTitles = [ "" ]
     if self.compTopRwgt:
-      self.topPtRwgtLabels.extend([ "TopPtRwgtSF", "TopPtRwgtSFSquared" ])
-      self.topPtRwgtTitles.extend([ "* top-pT", "* top-pT^2" ])
+      for choice in self.topPtRwgtChoices:
+        self.topPtRwgtLabels.extend([ "{}TopPtRwgtSF".format(choice), "{}TopPtRwgtSFSquared".format(choice) ])
+        self.topPtRwgtTitles.extend([ "* top-pT({})".format(choice), "* top-pT({})^2".format(choice) ])
 
     for topPtRwgtIdx, topPtRwgtLabel in enumerate(self.topPtRwgtLabels):
       for lheTHXSMWeightIndex in self.lheTHXSMWeightIndices:
@@ -317,19 +320,33 @@ class countHistogramProducer(Module):
       histogramNames
     ))
 
-  def getTopRwgtSF(self, genTops):
+  def getTopRwgtSF(self, genTops, choice):
     # fit results taken from Christian's slides shared internally
     assert(genTops)
     assert(len(genTops) == 2)
     assert(genTops[0].pdgId * genTops[1].pdgId < 0)
+    assert(choice in self.topPtRwgtChoices)
     genTop_pos_idx = 0 if genTops[0].pdgId > 0 else 1
     genTop_neg_idx = 1 - genTop_pos_idx
     genTop_pos_pt = genTops[genTop_pos_idx].pt
     genTop_neg_pt = genTops[genTop_neg_idx].pt
     genTop_pt_avg = (genTop_pos_pt + genTop_neg_pt) / 2.
-    a = 0.058    # TOP-16-011: 0.0615
-    b = -0.000466 # TOP-16-011 -0.0005
-    return np.exp(a + b * genTop_pt_avg)
+    if choice == 'TOP16011':
+      # figures from TOP-16-011
+      a = 0.0615
+      b = -0.0005
+      return np.exp(a + b * genTop_pt_avg)
+    elif choice == 'Linear':
+      a = 0.058
+      b = -0.000466
+      return np.exp(a + b * genTop_pt_avg)
+    elif choice == 'Quadratic':
+      a = 0.088
+      b = -0.00087
+      c = 9.2e-07
+      return np.exp(a + b * genTop_pt_avg + c * genTop_pt_avg**2)
+    else:
+      raise RuntimeError("Invalid choice: %s" % choice)
 
   def getLHEEnvelope(self, LHEScaleWeight):
     if len(LHEScaleWeight) != self.nLHEEnvelope_required:
@@ -346,7 +363,8 @@ class countHistogramProducer(Module):
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
     self.out = wrappedOutputTree
     if self.compTopRwgt:
-      self.out.branch(self.topRwgtBranchName, "F")
+      for choice in self.topPtRwgtChoices:
+        self.out.branch("{}_{}".format(self.topRwgtBranchName, choice), "F")
     inputTreeBranchNames = [ branch.GetName() for branch in inputTree.GetListOfBranches() ]
     if self.LHEScaleWeightName in inputTreeBranchNames:
       self.compLHEEnvelope = True
@@ -379,11 +397,11 @@ class countHistogramProducer(Module):
       l1_up   = getattr(event, self.l1PrefireWeightUpName)
       l1_down = getattr(event, self.l1PrefireWeightDownName)
 
-    topRwgt = 1.
+    topRwgt = [ 1. ] * len(self.topPtRwgtChoices)
     LHEEnvelopeValues = [ 1., 1. ]
     if self.compTopRwgt:
       genTops = Collection(event, self.genTopCollectionName)
-      topRwgt = self.getTopRwgtSF(genTops)
+      topRwgt = [ self.getTopRwgtSF(genTops, choice) for choice in self.topPtRwgtChoices ]
 
     if hasattr(event, self.genWeightName):
       genWeight = getattr(event, self.genWeightName)
@@ -407,7 +425,14 @@ class countHistogramProducer(Module):
         puWeight_down = getattr(event, self.puWeightName_down)
 
         for topPtRwgtIdx, topPtRwgtLabel in enumerate(self.topPtRwgtLabels):
-          topSF = topRwgt**topPtRwgtIdx
+          if self.compTopRwgt and topPtRwgtIdx > 0:
+            topSF_pow = int((topPtRwgtIdx % 2) == 0) + 1
+            assert(topSF_pow in [1, 2])
+            topSF_idx = int((topPtRwgtIdx - 1) / 2)
+            assert(topSF_idx <= len(self.topPtRwgtChoices))
+            topSF = topRwgt[topSF_idx]**topSF_pow
+          else:
+            topSF = 1.
 
           for lheTHXSMWeightIndex in self.lheTHXSMWeightIndices:
             do_tH = lheTHXSMWeightIndex >= 0
@@ -733,7 +758,8 @@ class countHistogramProducer(Module):
         print('Missing branch: %s' % self.genWeightName)
 
     if self.compTopRwgt:
-      self.out.fillBranch(self.topRwgtBranchName, topRwgt)
+      for topPtRwgtIdx, choice in enumerate(self.topPtRwgtChoices):
+        self.out.fillBranch("{}_{}".format(self.topRwgtBranchName, choice), topRwgt[topPtRwgtIdx])
     if self.compLHEEnvelope:
       self.out.fillBranch(self.LHEEnvelopeNameUp, LHEEnvelopeValues[0])
       self.out.fillBranch(self.LHEEnvelopeNameDown, LHEEnvelopeValues[1])
