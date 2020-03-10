@@ -320,8 +320,28 @@ class countHistogramProducer(Module):
       histogramNames
     ))
 
+  def compTopRwgtSF(self, genTopPt, choice):
+    if choice == 'TOP16011':
+      # figures from TOP-16-011
+      a = 0.0615
+      b = -0.0005
+      genTopPt = min(genTopPt, 800.)
+      return np.exp(a + b * genTopPt)
+    elif choice == 'Linear':
+      a = 0.058
+      b = -0.000466
+      genTopPt = min(genTopPt, 500.)
+      return np.exp(a + b * genTopPt)
+    elif choice == 'Quadratic':
+      a = 0.088
+      b = -0.00087
+      c = 9.2e-07
+      genTopPt = min(genTopPt, 472.)
+      return np.exp(a + b * genTopPt + c * genTopPt**2)
+    else:
+      raise RuntimeError("Invalid choice: %s" % choice)
+  
   def getTopRwgtSF(self, genTops, choice):
-    # fit results taken from Christian's slides shared internally
     assert(genTops)
     assert(len(genTops) == 2)
     assert(genTops[0].pdgId * genTops[1].pdgId < 0)
@@ -330,23 +350,7 @@ class countHistogramProducer(Module):
     genTop_neg_idx = 1 - genTop_pos_idx
     genTop_pos_pt = genTops[genTop_pos_idx].pt
     genTop_neg_pt = genTops[genTop_neg_idx].pt
-    genTop_pt_avg = min((genTop_pos_pt + genTop_neg_pt) / 2., 472.)
-    if choice == 'TOP16011':
-      # figures from TOP-16-011
-      a = 0.0615
-      b = -0.0005
-      return np.exp(a + b * genTop_pt_avg)
-    elif choice == 'Linear':
-      a = 0.058
-      b = -0.000466
-      return np.exp(a + b * genTop_pt_avg)
-    elif choice == 'Quadratic':
-      a = 0.088
-      b = -0.00087
-      c = 9.2e-07
-      return np.exp(a + b * genTop_pt_avg + c * genTop_pt_avg**2)
-    else:
-      raise RuntimeError("Invalid choice: %s" % choice)
+    return np.sqrt(compTopRwgtSF(genTop_pos_pt, choice) * compTopRwgtSF(genTop_neg_pt, choice))
 
   def getLHEEnvelope(self, LHEScaleWeight):
     if len(LHEScaleWeight) != self.nLHEEnvelope_required:
