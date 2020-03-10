@@ -330,7 +330,7 @@ class countHistogramProducer(Module):
     genTop_neg_idx = 1 - genTop_pos_idx
     genTop_pos_pt = genTops[genTop_pos_idx].pt
     genTop_neg_pt = genTops[genTop_neg_idx].pt
-    genTop_pt_avg = (genTop_pos_pt + genTop_neg_pt) / 2.
+    genTop_pt_avg = min((genTop_pos_pt + genTop_neg_pt) / 2., 500.)
     if choice == 'TOP16011':
       # figures from TOP-16-011
       a = 0.0615
