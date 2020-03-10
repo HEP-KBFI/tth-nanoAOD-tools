@@ -350,7 +350,7 @@ class countHistogramProducer(Module):
     genTop_neg_idx = 1 - genTop_pos_idx
     genTop_pos_pt = genTops[genTop_pos_idx].pt
     genTop_neg_pt = genTops[genTop_neg_idx].pt
-    return np.sqrt(compTopRwgtSF(genTop_pos_pt, choice) * compTopRwgtSF(genTop_neg_pt, choice))
+    return np.sqrt(self.compTopRwgtSF(genTop_pos_pt, choice) * self.compTopRwgtSF(genTop_neg_pt, choice))
 
   def getLHEEnvelope(self, LHEScaleWeight):
     if len(LHEScaleWeight) != self.nLHEEnvelope_required:
