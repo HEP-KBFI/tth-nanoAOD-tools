@@ -283,7 +283,7 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
           (genWfromTop, genTopCandidate, ', '.join(map(str, genWfromTopDaughters)))
         )
       genLepFromWfromTop = lepsFromWfromTop[0]
-      nusLepFromWfromTop = filter(lambda genPart: genPart.pdgId != sign(genWfromTop.pdgId) * (abs(genLepFromWfromTop.pdgId) + 1), genWfromTopDaughters)
+      nusLepFromWfromTop = filter(lambda genPart: genPart.pdgId == sign(genWfromTop.pdgId) * (abs(genLepFromWfromTop.pdgId) + 1), genWfromTopDaughters)
       if len(nusLepFromWfromTop) != 1:
         raise ValueError("Inconsistent W (%s) decay products from top (%s) decay: %s" % \
           (genWfromTop, genTopCandidate, ', '.join(map(str, genWfromTopDaughters)))
