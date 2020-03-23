@@ -37,6 +37,24 @@ btagSF_deepFlav_2016         = lambda : btagSFProducer_explicitBranchNames('2016
 btagSF_csvv2_2016            = lambda : btagSFProducer_explicitBranchNames('2016',         'csvv2') # legacy
 btagSF_cmva_2016             = lambda : btagSFProducer_explicitBranchNames('2016',         'cmva') # legacy
 
+btagSF_deep_2018_LSLoose     = lambda : btagSFProducer_explicitBranchNames('2018', 'deepcsv', 'JetAK4LSLoose')
+btagSF_deepFlav_2018_LSLoose = lambda : btagSFProducer_explicitBranchNames('2018', 'deepjet', 'JetAK4LSLoose')
+
+btagSF_deep_2017_LSLoose     = lambda : btagSFProducer_explicitBranchNames('2017', 'deepcsv', 'JetAK4LSLoose')
+btagSF_deepFlav_2017_LSLoose = lambda : btagSFProducer_explicitBranchNames('2017', 'deepjet', 'JetAK4LSLoose')
+btagSF_csvv2_2017_LSLoose    = lambda : btagSFProducer_explicitBranchNames('2017', 'csvv2', 'JetAK4LSLoose') # legacy
+
+btagSF_deep_2016_TuneCP5_LSLoose     = lambda : btagSFProducer_explicitBranchNames('2016_TuneCP5', 'deepcsv', 'JetAK4LSLoose')
+btagSF_deepFlav_2016_TuneCP5_LSLoose = lambda : btagSFProducer_explicitBranchNames('2016_TuneCP5', 'deepjet', 'JetAK4LSLoose')
+btagSF_deep_2016_LSLoose             = lambda : btagSFProducer_explicitBranchNames('2016',         'deepcsv', 'JetAK4LSLoose')
+btagSF_deepFlav_2016_LSLoose         = lambda : btagSFProducer_explicitBranchNames('2016',         'deepjet', 'JetAK4LSLoose')
+btagSF_csvv2_2016_LSLoose            = lambda : btagSFProducer_explicitBranchNames('2016',         'csvv2', 'JetAK4LSLoose') # legacy
+btagSF_cmva_2016_LSLoose             = lambda : btagSFProducer_explicitBranchNames('2016',         'cmva', 'JetAK4LSLoose') # legacy
+
 btagSF_deep_2018_subjet = lambda: btagSFProducer_explicitBranchNames('2018', 'deepcsv', 'SubJet')
 btagSF_deep_2017_subjet = lambda: btagSFProducer_explicitBranchNames('2017', 'deepcsv', 'SubJet')
 btagSF_deep_2016_subjet = lambda: btagSFProducer_explicitBranchNames('2016', 'deepcsv', 'SubJet')
+
+btagSF_deep_2018_subjet_LSLoose = lambda: btagSFProducer_explicitBranchNames('2018', 'deepcsv', 'SubJetAK8LSLoose')
+btagSF_deep_2017_subjet_LSLoose = lambda: btagSFProducer_explicitBranchNames('2017', 'deepcsv', 'SubJetAK8LSLoose')
+btagSF_deep_2016_subjet_LSLoose = lambda: btagSFProducer_explicitBranchNames('2016', 'deepcsv', 'SubJetAK8LSLoose')
