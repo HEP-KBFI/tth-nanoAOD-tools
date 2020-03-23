@@ -3,10 +3,10 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import 
 #NOTE assumes FullSim; no support for FastSim implemented, yet
 
 class btagSFProducer_explicitBranchNames(btagSFProducer):
-  def __init__(self, era, algo, verbose = 0):
-    btagSFProducer.__init__(self, era, algo, None, verbose)
+  def __init__(self, era, algo, jetName = 'Jet', verbose = 0):
+    btagSFProducer.__init__(self, era, algo, None, verbose, jetName)
 
-    self.branchName_prefix       = "Jet_btagSF_%s" % self.algo
+    self.branchName_prefix       = "%s_btagSF_%s" % (self.jetCollectionName, self.algo)
     self.branchName_shape_prefix = '%s_shape'      % self.branchName_prefix
 
     self.branchNames_central_and_systs = {}
@@ -36,3 +36,7 @@ btagSF_deep_2016             = lambda : btagSFProducer_explicitBranchNames('2016
 btagSF_deepFlav_2016         = lambda : btagSFProducer_explicitBranchNames('2016',         'deepjet')
 btagSF_csvv2_2016            = lambda : btagSFProducer_explicitBranchNames('2016',         'csvv2') # legacy
 btagSF_cmva_2016             = lambda : btagSFProducer_explicitBranchNames('2016',         'cmva') # legacy
+
+btagSF_deep_2018_subjet = lambda: btagSFProducer_explicitBranchNames('2018', 'deepcsv', 'SubJet')
+btagSF_deep_2017_subjet = lambda: btagSFProducer_explicitBranchNames('2017', 'deepcsv', 'SubJet')
+btagSF_deep_2016_subjet = lambda: btagSFProducer_explicitBranchNames('2016', 'deepcsv', 'SubJet')

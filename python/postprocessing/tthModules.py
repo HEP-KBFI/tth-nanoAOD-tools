@@ -9,7 +9,8 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.diHiggsVarProducer import d
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import btagSF_deep_2016, btagSF_deepFlav_2016, btagSF_csvv2_2016, btagSF_cmva_2016, \
                                                                                                btagSF_deep_2017, btagSF_deepFlav_2017, btagSF_csvv2_2017,                   \
                                                                                                btagSF_deep_2018, btagSF_deepFlav_2018,                                      \
-                                                                                               btagSF_deep_2016_TuneCP5, btagSF_deepFlav_2016_TuneCP5
+                                                                                               btagSF_deep_2016_TuneCP5, btagSF_deepFlav_2016_TuneCP5,                      \
+                                                                                               btagSF_deep_2018_subjet, btagSF_deep_2017_subjet, btagSF_deep_2016_subjet
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
 from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import countHistogramAll, countHistogramAllCompTopRwgt
 from tthAnalysis.NanoAODTools.postprocessing.modules.binnedEventCountProducer import binnedEventCounter
