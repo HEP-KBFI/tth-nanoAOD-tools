@@ -20,6 +20,14 @@ jetmetUncertainties2016All = createJMECorrector(dataYear = 2016, jesUncert = "Al
 jetmetUncertainties2017All = createJMECorrector(dataYear = 2017, jesUncert = "All", metBranchName = "MET")
 jetmetUncertainties2018All = createJMECorrector(dataYear = 2018, jesUncert = "All")
 
+fatjetUncertainties2016Total = createJMECorrector(dataYear = 2016, jesUncert = "Total", jetType = "AK8PFPuppi")
+fatjetUncertainties2017Total = createJMECorrector(dataYear = 2017, jesUncert = "Total", jetType = "AK8PFPuppi")
+fatjetUncertainties2018Total = createJMECorrector(dataYear = 2018, jesUncert = "Total", jetType = "AK8PFPuppi")
+
 jetmetAK4LSLooseUncertainties2016Total = createJMECorrector(dataYear = 2016, jesUncert = "Total", jetType = "AK4LSLoosePFchs")
 jetmetAK4LSLooseUncertainties2017Total = createJMECorrector(dataYear = 2017, jesUncert = "Total", jetType = "AK4LSLoosePFchs", metBranchName = "MET")
 jetmetAK4LSLooseUncertainties2018Total = createJMECorrector(dataYear = 2018, jesUncert = "Total", jetType = "AK4LSLoosePFchs")
+
+fatjetAK8LSLooseUncertainties2016Total = createJMECorrector(dataYear = 2016, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi")
+fatjetAK8LSLooseUncertainties2017Total = createJMECorrector(dataYear = 2017, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi")
+fatjetAK8LSLooseUncertainties2018Total = createJMECorrector(dataYear = 2018, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi")
