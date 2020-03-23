@@ -19,3 +19,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 impor
 jetmetUncertainties2016All = createJMECorrector(dataYear = 2016, jesUncert = "All")
 jetmetUncertainties2017All = createJMECorrector(dataYear = 2017, jesUncert = "All", metBranchName = "MET")
 jetmetUncertainties2018All = createJMECorrector(dataYear = 2018, jesUncert = "All")
+
+jetmetAK4LSLooseUncertainties2016Total = createJMECorrector(dataYear = 2016, jesUncert = "Total", jetType = "AK4LSLoosePFchs")
+jetmetAK4LSLooseUncertainties2017Total = createJMECorrector(dataYear = 2017, jesUncert = "Total", jetType = "AK4LSLoosePFchs", metBranchName = "MET")
+jetmetAK4LSLooseUncertainties2018Total = createJMECorrector(dataYear = 2018, jesUncert = "Total", jetType = "AK4LSLoosePFchs")
