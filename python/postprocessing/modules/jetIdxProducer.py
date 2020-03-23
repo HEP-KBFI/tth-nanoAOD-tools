@@ -5,8 +5,8 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class jetIdxProducer(Module):
-  def __init__(self):
-    self.jetBr = 'Jet'
+  def __init__(self, jetBr = 'Jet'):
+    self.jetBr = jetBr
     self.jetIdxBr = '{}_jetIdx'.format(self.jetBr)
 
   def beginJob(self):
@@ -29,3 +29,4 @@ class jetIdxProducer(Module):
     return True
 
 jetIdx = lambda : jetIdxProducer()
+jetAK4LSLooseIdx = lambda : jetIdxProducer(jetBr = 'JetAK4LSLoose')

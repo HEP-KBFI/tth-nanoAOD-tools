@@ -4,7 +4,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.lepJetVarProducer import le
 from tthAnalysis.NanoAODTools.postprocessing.modules.genHiggsDecayModeProducer import genHiggsDecayMode
 from tthAnalysis.NanoAODTools.postprocessing.modules.tauIDLogProducer import tauIDLog
 from tthAnalysis.NanoAODTools.postprocessing.modules.absIsoProducer import absIso
-from tthAnalysis.NanoAODTools.postprocessing.modules.jetIdxProducer import jetIdx
+from tthAnalysis.NanoAODTools.postprocessing.modules.jetIdxProducer import jetIdx, jetAK4LSLooseIdx
 from tthAnalysis.NanoAODTools.postprocessing.modules.diHiggsVarProducer import diHiggsVar_2016, diHiggsVar_2017, diHiggsVar_2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFProducer_explicitBranchNames import *
 from tthAnalysis.NanoAODTools.postprocessing.modules.eventCountHistogramProducer import eventCountHistogram
