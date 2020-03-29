@@ -5,56 +5,6 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
-#----------------------------------------------------------------------------------------------------
-# KE: global functions copied from PhysicsTools/HeppyCore/python/utils/deltar.py
-
-def deltaPhi(p1, p2):
-    '''Computes delta phi, handling periodic limit conditions.'''
-    res = p1 - p2
-    while res > math.pi:
-        res -= 2*math.pi
-    while res < -math.pi:
-        res += 2*math.pi
-    return res
-
-def deltaR2(e1, p1, e2=None, p2=None):
-    '''Take either 4 arguments (eta,phi, eta,phi) or two particles that have 'eta', 'phi' methods)'''
-    if (e2 == None and p2 == None):
-        return deltaR2(e1.eta, e1.phi, p1.eta, p1.phi)
-    de = e1 - e2
-    dp = deltaPhi(p1, p2)
-    return de*de + dp*dp
-
-def bestMatch(ptc, matchCollection):
-    '''Return the best match to ptc in matchCollection,
-    which is the closest ptc in delta R,
-    together with the squared distance dR2 between ptc
-    and the match.'''
-    deltaR2Min = float('+inf')
-    bm = None
-    for match in matchCollection:
-        dR2 = deltaR2(ptc, match)
-        if dR2 < deltaR2Min:
-            deltaR2Min = dR2
-            bm = match
-    return bm, deltaR2Min
-
-def matchObjectCollection(ptcs, matchCollection, deltaRMax = 0.4, filter = lambda x,y : True):
-    pairs = {}
-    if len(ptcs)==0:
-        return pairs
-    if len(matchCollection)==0:
-        return dict( list(zip(ptcs, [None]*len(ptcs))) )
-    dR2Max = deltaRMax ** 2
-    for ptc in ptcs:
-        bm, dr2 = bestMatch( ptc, [ mob for mob in matchCollection if filter(object,mob) ] )
-        if dr2 < dR2Max:
-            pairs[ptc] = bm
-        else:
-            pairs[ptc] = None
-    return pairs
-#----------------------------------------------------------------------------------------------------
-
 class lepJetVarProducer(Module):
 
     def __init__(self, era, btagAlgos):
@@ -80,24 +30,26 @@ class lepJetVarProducer(Module):
             raise ValueError("Invalid b-tagging algorithm: %s" % btagAlgo)
 
         self.nLepton_branchNames = { leptonBranchName : "n%s" % leptonBranchName for leptonBranchName in self.leptonBranchNames }
-        self.jetPtRatio_branchNames = { leptonBranchName : "%s_jetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
-        self.jetPtRelv2_branchNames = { leptonBranchName : "%s_jetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetPtRatio_branchNames = { leptonBranchName : "%s_assocJetPtRatio" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
+        self.jetPtRelv2_branchNames = { leptonBranchName : "%s_assocJetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
 
         self.jetBtagDiscr_branchNames = { leptonBranchName : {
-            btagAlgo : "%s_jetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
+            btagAlgo : "%s_assocJetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
           } for leptonBranchName in self.leptonBranchNames }
 
         # define txt file with L1 jet energy corrections
         # (downloaded from https://twiki.cern.ch/twiki/bin/view/CMS/JECDataMC )
-        self.l1corrInputFilePath = os.path.join(os.environ['CMSSW_BASE'], "src/tthAnalysis/NanoAODTools/data")
+        self.l1corrInputFilePath = os.path.join(os.environ['CMSSW_BASE'], "src/PhysicsTools/NanoAODTools/data/jme")
         if self.era == '2016':
-            self.l1corrInputFileName = "Summer16_07Aug2017_V11_MC_L1FastJet_AK4PFchs.txt"
+            l1corrInputDirName = "Summer16_07Aug2017_V11_MC"
         elif self.era == '2017':
-          self.l1corrInputFileName = "Fall17_17Nov2017_V32_MC_L1FastJet_AK4PFchs.txt"
+          l1corrInputDirName = "Fall17_17Nov2017_V32_MC"
         elif self.era == '2018':
-            self.l1corrInputFileName = "Autumn18_V8_MC_L1FastJet_AK4PFchs.txt"
+            l1corrInputDirName = "Autumn18_V19_MC"
         else:
           raise ValueError("Invalid era: %s" % self.era)
+        self.l1corrInputFilePath = os.path.join(self.l1corrInputFilePath, l1corrInputDirName)
+        self.l1corrInputFileName = "{}_L1FastJet_AK4PFchs.txt".format(l1corrInputDirName)
 
         # load libraries for accessing jet energy corrections from txt files
         for library in [ "libCondFormatsJetMETObjects" ]:
@@ -176,7 +128,7 @@ class lepJetVarProducer(Module):
 
     def analyze(self, event):
         jets = Collection(event, self.jetBranchName)
-
+        njets = len(jets)
         rho = getattr(event, self.rhoBranchName)
 
         for leptonBranchName in self.leptonBranchNames:
@@ -186,15 +138,14 @@ class lepJetVarProducer(Module):
             leptons_jetPtRelv2 = []
             leptons_jetBtagDiscr = { btagAlgo : [] for btagAlgo in self.btagAlgos }
 
-            pairs = matchObjectCollection(leptons, jets)
             for lepton in leptons:
-                jet = pairs[lepton]
-                if jet is None:
+                if lepton.jetIdx < 0 or lepton.jetIdx >= njets:
                     leptons_jetPtRatio.append(1. / (1. + lepton.pfRelIso04_all))
                     leptons_jetPtRelv2.append(-1.)
                     for btagAlgo in self.btagAlgos:
                       leptons_jetBtagDiscr[btagAlgo].append(-1.)
                 else:
+                    jet = jets[lepton.jetIdx]
                     leptons_jetPtRatio.append(self.getPtRatio(lepton, jet, rho, leptonBranchName == self.electronBranchName))
                     leptons_jetPtRelv2.append(self.getPtRelv2(lepton, jet, rho, leptonBranchName == self.electronBranchName))
 
@@ -210,6 +161,6 @@ class lepJetVarProducer(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["deep", 'deepjet', "csvv2", "cmva"])
+lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["deep", 'deepjet', "csvv2"])
 lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["deep", 'deepjet', "csvv2"])
 lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["deep", 'deepjet'])
