@@ -161,6 +161,6 @@ class lepJetVarProducer(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["deep", 'deepjet', "csvv2"])
-lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["deep", 'deepjet', "csvv2"])
-lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["deep", 'deepjet'])
+lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["DeepCSV", 'DeepJet', "CSV"])
+lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["DeepCSV", 'DeepJet', "CSV"])
+lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["DeepCSV", 'DeepJet'])
