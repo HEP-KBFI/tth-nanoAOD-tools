@@ -25,6 +25,12 @@ class lepJetVarProducer(Module):
           'csvv2'   : 'btagCSVV2',
           'cmva'    : 'btagCMVA',
         }
+        self.btagBranchNameMap = {
+            'deep'    : 'DeepCSV',
+            'deepjet' : 'DeepJet',
+            'csvv2'   : 'CSV',
+            'cmva'    : 'CMVA',
+        }
         for btagAlgo in self.btagAlgos:
           if btagAlgo not in self.btagAlgoMap:
             raise ValueError("Invalid b-tagging algorithm: %s" % btagAlgo)
@@ -34,7 +40,7 @@ class lepJetVarProducer(Module):
         self.jetPtRelv2_branchNames = { leptonBranchName : "%s_assocJetPtRelv2" % (leptonBranchName) for leptonBranchName in self.leptonBranchNames }
 
         self.jetBtagDiscr_branchNames = { leptonBranchName : {
-            btagAlgo : "%s_assocJetBtag_%s" % (leptonBranchName, btagAlgo) for btagAlgo in self.btagAlgos
+            btagAlgo : "%s_assocJetBtag_%s" % (leptonBranchName, self.btagBranchNameMap[btagAlgo]) for btagAlgo in self.btagAlgos
           } for leptonBranchName in self.leptonBranchNames }
 
         # define txt file with L1 jet energy corrections
@@ -161,6 +167,6 @@ class lepJetVarProducer(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["DeepCSV", 'DeepJet', "CSV"])
-lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["DeepCSV", 'DeepJet', "CSV"])
-lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["DeepCSV", 'DeepJet'])
+lepJetVarBTagAll_2016 = lambda : lepJetVarProducer('2016', ["deep", 'deepjet', "csvv2"])
+lepJetVarBTagAll_2017 = lambda : lepJetVarProducer('2017', ["deep", 'deepjet', "csvv2"])
+lepJetVarBTagAll_2018 = lambda : lepJetVarProducer('2018', ["deep", 'deepjet'])
