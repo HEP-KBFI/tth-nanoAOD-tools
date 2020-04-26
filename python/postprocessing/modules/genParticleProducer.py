@@ -222,8 +222,10 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
 
   for genTopCandidateIdx, genTopCandidateDaughterIdxs in genTopCandidates.items():
     genTopCandidate = genParticles[genTopCandidateIdx]
-    if len(genTopCandidateDaughterIdxs) == 0:
-      print("WARNING: found generator level top with no further decays: %s" % genTopCandidate)
+    if len(genTopCandidateDaughterIdxs) != 2:
+      print("WARNING: invalid number of top (%s) decay products (%s): %i; total # tops: %i" %
+        (genTopCandidate, ', '.join(map(lambda idx: str(genParticles[idx]), genTopCandidateDaughterIdxs)), len(genTopCandidateDaughterIdxs), len(genTopCandidates))
+      )
       del genTopCandidates[genTopCandidateIdx]
       continue
 
@@ -244,10 +246,7 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
 
   for genTopCandidateIdx, genTopCandidateDaughterIdxs in genTopCandidates.items():
     genTopCandidate = genParticles[genTopCandidateIdx]
-    if len(genTopCandidateDaughterIdxs) != 2:
-      raise ValueError("Invalid number of top (%s) decay products (%s): %i" % \
-        (genTopCandidate, ', '.join(map(lambda idx: genParticles[idx], genTopCandidateDaughterIdxs)), len(genTopCandidateDaughterIdxs))
-      )
+    assert(len(genTopCandidateDaughterIdxs) == 2)
 
     genWsfromTop = [ genParticles[idx] for idx in genTopCandidateDaughterIdxs if genParticles[idx].pdgId == 24 * sign(genTopCandidate.pdgId) ]
     genQsfromTop = [ genParticles[idx] for idx in genTopCandidateDaughterIdxs if sign(genTopCandidate.pdgId) * genParticles[idx].pdgId in [1, 3, 5] ]
