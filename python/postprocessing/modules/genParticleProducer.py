@@ -216,12 +216,19 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
     if genTopIdx not in genTopMotherMap.values():
       genTopCandidates[genTopIdx] = []
 
-  if choice == SelectionOptions.SAVE_TOP:
-    return map(lambda genTopIdx: genParticles[genTopIdx], genTopCandidates)
-
   for genPart in genParticles:
     if genPart.genPartIdxMother in genTopCandidates:
       genTopCandidates[genPart.genPartIdxMother].append(genPart.idx)
+
+  for genTopCandidateIdx, genTopCandidateDaughterIdxs in genTopCandidates.items():
+    genTopCandidate = genParticles[genTopCandidateIdx]
+    if len(genTopCandidateDaughterIdxs) == 0:
+      print("WARNING: found generator level top with no further decays: %s" % genTopCandidate)
+      del genTopCandidates[genTopCandidateIdx]
+      continue
+
+  if choice == SelectionOptions.SAVE_TOP:
+    return map(lambda genTopIdx: genParticles[genTopIdx], genTopCandidates)
 
   # top always decays into W + q, where q = d, s, b with b the most common one
   genBquarkFromTop               = []
