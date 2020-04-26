@@ -3,8 +3,10 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
+
 import math
 import logging
+import sys
 
 
 sign = lambda x: int(math.copysign(1, x) if x != 0 else 0)
@@ -555,7 +557,14 @@ class genParticleProducer(Module):
     genParticles  = map(lambda genPartIdx: GenPartAux(genPartIdx[1], genPartIdx[0], self.massTable), enumerate(Collection(event, "GenPart")))
 
     for branchBaseName in self.branchBaseNames:
-      gen_arr = self.selections[branchBaseName](genParticles)
+      try:
+        gen_arr = self.selections[branchBaseName](genParticles)
+      except:
+        exception_type, exception_value, exception_traceback = sys.exc_info()
+        exception_value_str = "{} at run:lumi:event {}:{}:{}".format(
+          str(exception_value), event.run, event.luminosityBlock, event.event
+        )
+        raise exception_type, type(exception_value)(exception_value_str), exception_traceback
       gen_arr = list(sorted(gen_arr, key = lambda genPart: genPart.pt, reverse = True)) # sort by pT
       for branchName, branchType in self.genBranches.items():
         self.out.fillBranch(
