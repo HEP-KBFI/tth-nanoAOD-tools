@@ -376,7 +376,7 @@ class countHistogramProducer(Module):
       genTopPt = min(genTopPt, 472.)
       return np.exp(a + b * genTopPt + c * genTopPt**2)
     elif choice == 'HighPt':
-      # CV: new parametrization that is valid up tp 3 TeV, given on slide 12 of the presentation by Dennis Roy in the Higgs PAG meeting on 20/05/2020:
+      # CV: new parametrization that is valid up tp 3 TeV, given on slide 12 of the presentation by Dennis Roy in the Higgs PAG meeting on 12/05/2020:
       #       https://indico.cern.ch/event/904971/contributions/3857701/attachments/2036949/3410728/TopPt_20.05.12.pdf 
       a = -2.02274e-01
       b =  1.09734e-04
