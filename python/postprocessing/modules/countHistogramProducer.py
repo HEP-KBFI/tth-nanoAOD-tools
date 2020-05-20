@@ -51,7 +51,7 @@ class countHistogramProducer(Module):
     self.ISR_up_idx = 2
     self.FSR_up_idx = 3
 
-    self.topPtRwgtChoices = [ "TOP16011", "Linear", "Quadratic" ]
+    self.topPtRwgtChoices = [ "TOP16011", "Linear", "Quadratic", "HighPt" ]
 
     self.htxs = collections.OrderedDict([
       ("fwd",         lambda pt, eta: abs(eta) >= 2.5                     ),
@@ -375,6 +375,16 @@ class countHistogramProducer(Module):
       c = 9.2e-07
       genTopPt = min(genTopPt, 472.)
       return np.exp(a + b * genTopPt + c * genTopPt**2)
+    elif choice == 'HighPt':
+      # CV: new parametrization that is valid up tp 3 TeV, given on slide 12 of the presentation by Dennis Roy in the Higgs PAG meeting on 20/05/2020:
+      #       https://indico.cern.ch/event/904971/contributions/3857701/attachments/2036949/3410728/TopPt_20.05.12.pdf 
+      a = -2.02274e-01
+      b =  1.09734e-04
+      c = -1.30088e-07
+      d =  5.83494e+01
+      e =  1.96252e+02
+      genTopPt = min(genTopPt, 3000.)
+      return np.exp(a + b * genTopPt + c * genTopPt**2 + d / (genTopPt + e))
     else:
       raise RuntimeError("Invalid choice: %s" % choice)
   
