@@ -11,7 +11,7 @@ from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
 class countHistogramProducer(Module):
 
-  def __init__(self, compTopRwgt, compHTXS):
+  def __init__(self, compTopRwgt, compHTXS, splitByLHENjet):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -42,9 +42,14 @@ class countHistogramProducer(Module):
     self.topRwgtBranchName       = "topPtRwgt"
     self.genTopCollectionName    = "GenTop"
     self.compHTXS                = compHTXS
+    self.splitByLHENjet          = splitByLHENjet
     self.htxsBranchName          = "HTXS_Higgs"
     self.htxsPtBranchName        = "%s_pt" % self.htxsBranchName
     self.htxsEtaBranchName       = "%s_y" % self.htxsBranchName
+    self.LHENjetsBranchName      = "LHE_Njets"
+
+    if self.compHTXS and self.splitByLHENjet:
+      raise ValueError("Cannot enable HTXS binning and LHE Njet binning simultanteously")
 
     self.ISR_down_idx = 0
     self.FSR_down_idx = 1
@@ -62,6 +67,13 @@ class countHistogramProducer(Module):
       ("ptGt300",     lambda pt, eta: abs(eta) < 2.5 and 300. <= pt       ),
       ("pt300to450",  lambda pt, eta: abs(eta) < 2.5 and 300. <= pt < 450.),
       ("ptGt450",     lambda pt, eta: abs(eta) < 2.5 and 450. <= pt       ),
+    ])
+
+    self.lheNjets = collections.OrderedDict([
+      ("LHENjet0", lambda lheNjet: lheNjet == 0),
+      ("LHENjet1", lambda lheNjet: lheNjet == 1),
+      ("LHENjet2", lambda lheNjet: lheNjet == 2),
+      ("LHENjet3", lambda lheNjet: lheNjet == 3),
     ])
 
     if self.compTopRwgt:
@@ -97,13 +109,15 @@ class countHistogramProducer(Module):
         self.topPtRwgtLabels.extend([ "{}TopPtRwgtSF".format(choice), "{}TopPtRwgtSFSquared".format(choice) ])
         self.topPtRwgtTitles.extend([ "* top-pT({})".format(choice), "* top-pT({})^2".format(choice) ])
 
-    self.htxs_binning = [ "" ]
+    self.aux_binning = [ "" ]
     if self.compHTXS:
-      self.htxs_binning.extend(list(self.htxs.keys()))
+      self.aux_binning.extend(list(self.htxs.keys()))
+    elif self.splitByLHENjet:
+      self.aux_binning.extend(list(self.lheNjets.keys()))
 
     for topPtRwgtIdx, topPtRwgtLabel in enumerate(self.topPtRwgtLabels):
       for lheTHXSMWeightIndex in self.lheTHXSMWeightIndices:
-        for htxs_bin in self.htxs_binning:
+        for aux_bin in self.aux_binning:
           do_tH = lheTHXSMWeightIndex >= 0
           insert_title = self.topPtRwgtTitles[topPtRwgtIdx]
           insert_title += ("* LHE(tH %d)" % lheTHXSMWeightIndex) if do_tH else ""
@@ -111,11 +125,16 @@ class countHistogramProducer(Module):
           insert_name += ("_rwgt%d" % lheTHXSMWeightIndex) if do_tH else ""
           suffix_title = ""
 
-          if htxs_bin:
+          if aux_bin:
             insert_name_empty = not bool(insert_name)
-            insert_name += "_%s" % htxs_bin
-            htxs_bin_name = htxs_bin.replace('pt', 'Higgs pt ').replace('to', '-').replace('Gt', '> ').replace('fwd', 'forward Higgs')
-            suffix_title += " (%s)" % htxs_bin_name
+            insert_name += "_%s" % aux_bin
+            if self.compHTXS:
+              aux_bin_name = aux_bin.replace('pt', 'Higgs pt ').replace('to', '-').replace('Gt', '> ').replace('fwd', 'forward Higgs')
+            elif self.splitByLHENjet:
+              aux_bin_name = '{} == {}'.format(aux_bin[:-1], aux_bin[-1])
+            else:
+              assert(False)
+            suffix_title += " (%s)" % aux_bin_name
             if insert_name_empty:
               self.histograms.update([
                 ('Count{}'.format(insert_name), {
@@ -454,24 +473,34 @@ class countHistogramProducer(Module):
       genTops = Collection(event, self.genTopCollectionName)
       topRwgt = [ self.getTopRwgtSF(genTops, choice) for choice in self.topPtRwgtChoices ]
 
-    for htxs_bin in self.htxs_binning:
+    for aux_bin in self.aux_binning:
 
-      if htxs_bin:
-        assert(self.compHTXS)
-        assert(htxs_bin in self.htxs)
-        if not hasattr(event, self.htxsPtBranchName):
-          raise RuntimeError("No such branch: %s" % self.htxsPtBranchName)
-        if not hasattr(event, self.htxsEtaBranchName):
-          raise RuntimeError("No such branch: %s" % self.htxsEtaBranchName)
-        htxs_pt = getattr(event, self.htxsPtBranchName)
-        htxs_eta = getattr(event, self.htxsEtaBranchName)
-        if not self.htxs[htxs_bin](htxs_pt, htxs_eta):
-          continue
+      if aux_bin:
+        assert(self.compHTXS or self.splitByLHENjet)
+        if self.compHTXS:
+          assert(aux_bin in self.htxs)
+          if not hasattr(event, self.htxsPtBranchName):
+            raise RuntimeError("No such branch: %s" % self.htxsPtBranchName)
+          if not hasattr(event, self.htxsEtaBranchName):
+            raise RuntimeError("No such branch: %s" % self.htxsEtaBranchName)
+          htxs_pt = getattr(event, self.htxsPtBranchName)
+          htxs_eta = getattr(event, self.htxsEtaBranchName)
+          if not self.htxs[aux_bin](htxs_pt, htxs_eta):
+            continue
+        elif self.splitByLHENjet:
+          assert(aux_bin in self.lheNjets)
+          if not hasattr(event, self.LHENjetsBranchName):
+            raise RuntimeError("No such branch: %s" % self.LHENjetsBranchName)
+          lhe_njets = getattr(event, self.LHENjetsBranchName)
+          if not self.lheNjets[aux_bin](lhe_njets):
+            continue
+        else:
+          assert(False)
 
-        if 'histogram' in self.histograms['Count_{}'.format(htxs_bin)]:
-          if not self.isInitialized(['Count_{}'.format(htxs_bin)]):
-            self.initHistograms(['Count_{}'.format(htxs_bin)])
-          self.histograms['Count_{}'.format(htxs_bin)]['histogram'].Fill(1, 1)
+        if 'histogram' in self.histograms['Count_{}'.format(aux_bin)]:
+          if not self.isInitialized(['Count_{}'.format(aux_bin)]):
+            self.initHistograms(['Count_{}'.format(aux_bin)])
+          self.histograms['Count_{}'.format(aux_bin)]['histogram'].Fill(1, 1)
 
       if hasattr(event, self.genWeightName):
         genWeight = getattr(event, self.genWeightName)
@@ -527,8 +556,8 @@ class countHistogramProducer(Module):
               if do_tH and not has_lhe:
                 continue
 
-              if htxs_bin:
-                insert_name = "%s_%s" % (insert_name_common, htxs_bin)
+              if aux_bin:
+                insert_name = "%s_%s" % (insert_name_common, aux_bin)
               else:
                 insert_name = insert_name_common
 
@@ -842,6 +871,7 @@ class countHistogramProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll            = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False)
-countHistogramAllCompTopRwgt = lambda: countHistogramProducer(compTopRwgt = True,  compHTXS = False)
-countHistogramAllCompHTXS    = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = True)
+countHistogramAll               = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False)
+countHistogramAllCompTopRwgt    = lambda: countHistogramProducer(compTopRwgt = True,  compHTXS = False, splitByLHENjet = False)
+countHistogramAllCompHTXS       = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = True,  splitByLHENjet = False)
+countHistogramAllSplitByLHENjet = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True)
