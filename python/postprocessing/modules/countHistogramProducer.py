@@ -72,10 +72,14 @@ class countHistogramProducer(Module):
     ])
 
     self.lheNjets = collections.OrderedDict([
-      ("LHENjet0", lambda lheNjet: lheNjet == 0),
-      ("LHENjet1", lambda lheNjet: lheNjet == 1),
-      ("LHENjet2", lambda lheNjet: lheNjet == 2),
-      ("LHENjet3", lambda lheNjet: lheNjet == 3),
+      ("LHENjet0_pos", lambda lheNjet, genWeight: lheNjet == 0 and genWeight > 0.),
+      ("LHENjet0_neg", lambda lheNjet, genWeight: lheNjet == 0 and genWeight < 0.),
+      ("LHENjet1_pos", lambda lheNjet, genWeight: lheNjet == 1 and genWeight > 0.),
+      ("LHENjet1_neg", lambda lheNjet, genWeight: lheNjet == 1 and genWeight < 0.),
+      ("LHENjet2_pos", lambda lheNjet, genWeight: lheNjet == 2 and genWeight > 0.),
+      ("LHENjet2_neg", lambda lheNjet, genWeight: lheNjet == 2 and genWeight < 0.),
+      ("LHENjet3_pos", lambda lheNjet, genWeight: lheNjet == 3 and genWeight > 0.),
+      ("LHENjet3_neg", lambda lheNjet, genWeight: lheNjet == 3 and genWeight < 0.),
     ])
 
     if self.compTopRwgt:
@@ -133,7 +137,9 @@ class countHistogramProducer(Module):
             if self.compHTXS:
               aux_bin_name = aux_bin.replace('pt', 'Higgs pt ').replace('to', '-').replace('Gt', '> ').replace('fwd', 'forward Higgs')
             elif self.splitByLHENjet:
-              aux_bin_name = '{} == {}'.format(aux_bin[:-1], aux_bin[-1])
+              aux_bin_split = aux_bin.split('_')
+              assert(aux_bin_split[1] in [ 'pos', 'neg' ])
+              aux_bin_name = 'LHENjets == {}, genWeight {} 0'.format(aux_bin_split[0][-1], '>' if aux_bin_split[1] == 'pos' else '<')
             else:
               assert(False)
             suffix_title += " (%s)" % aux_bin_name
@@ -494,8 +500,11 @@ class countHistogramProducer(Module):
           assert(aux_bin in self.lheNjets)
           if not hasattr(event, self.LHENjetsBranchName):
             raise RuntimeError("No such branch: %s" % self.LHENjetsBranchName)
+          assert(hasattr(event, self.genWeightName))
+          genWeight = getattr(event, self.genWeightName)
+          genWeight_sign = np.sign(genWeight)
           lhe_njets = getattr(event, self.LHENjetsBranchName)
-          if not self.lheNjets[aux_bin](lhe_njets):
+          if not self.lheNjets[aux_bin](lhe_njets, genWeight_sign):
             continue
         else:
           assert(False)
