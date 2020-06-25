@@ -35,8 +35,10 @@ class countHistogramProducer(Module):
     self.nLHEPdfWeight           = 101
     self.nLHEScaleWeight         = 9
     self.nLHEEnvelope            = 2
-    self.nLHEEnvelope_required   = self.nLHEScaleWeight
-    self.LHEEnvelopeIdxs         = [ 0, 1, 3, 5, 7, 8 ] # 0/8 muR & muF down/up, 1/7 muR down/up, 3/5 muF down/up
+    self.LHEEnvelopeIdxs         = {
+      9 : [ 0, 1, 3, 5, 7, 8 ], # 0/8 muR & muF down/up, 1/7 muR down/up, 3/5 muF down/up
+      8 : [ 0, 1, 3, 4, 6, 8 ], # same as 9, but the 5th weight (muR = muF = 1) is omitted
+    }
     self.compLHEEnvelope         = False
     self.compTopRwgt             = compTopRwgt
     self.topRwgtBranchName       = "topPtRwgt"
@@ -419,9 +421,10 @@ class countHistogramProducer(Module):
     return np.sqrt(self.compTopRwgtSF(genTop_pos_pt, choice) * self.compTopRwgtSF(genTop_neg_pt, choice))
 
   def getLHEEnvelope(self, LHEScaleWeight):
-    if len(LHEScaleWeight) != self.nLHEEnvelope_required:
+    nof_lheScaleWeights = len(LHEScaleWeight)
+    if nof_lheScaleWeights not in self.LHEEnvelopeIdxs:
       return (1., 1.)
-    LHEEnvelopeValues = [ self.clip(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs ]
+    LHEEnvelopeValues = [ self.clip(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs[nof_lheScaleWeights] ]
     return [ max(LHEEnvelopeValues), min(LHEEnvelopeValues) ]
 
   def beginJob(self):
@@ -705,12 +708,13 @@ class countHistogramProducer(Module):
                 LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
                 LHEEnvelopeValues = self.getLHEEnvelope(LHEScaleWeight)
 
-                if len(LHEScaleWeight) != self.nLHEScaleWeight:
+                nof_lheScaleWeight = len(LHEScaleWeight)
+                if nof_lheScaleWeight != self.nLHEScaleWeight:
                   print(
                     "WARNING: The length of '%s' array (= %i) does not match to the expected length of %i" % \
                     (self.LHEScaleWeightName, len(LHEScaleWeight), self.nLHEScaleWeight)
                   )
-                  self.nLHEScaleWeight = len(LHEScaleWeight)
+                  self.nLHEScaleWeight = nof_lheScaleWeight
 
                 if 'histogram' in self.histograms['CountWeightedLHEWeightScale{}'.format(insert_name)]:
                   if not self.isInitialized(['CountWeightedLHEWeightScale{}'.format(insert_name)]):
