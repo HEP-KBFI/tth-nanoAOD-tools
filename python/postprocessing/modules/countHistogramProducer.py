@@ -37,7 +37,7 @@ class countHistogramProducer(Module):
     self.nLHEEnvelope            = 2
     self.LHEEnvelopeIdxs         = {
       9 : [ 0, 1, 3, 5, 7, 8 ], # 0/8 muR & muF down/up, 1/7 muR down/up, 3/5 muF down/up
-      8 : [ 0, 1, 3, 4, 6, 8 ], # same as 9, but the 5th weight (muR = muF = 1) is omitted
+      8 : [ 0, 1, 3, 4, 6, 7 ], # same as 9, but the 5th weight (muR = muF = 1) is omitted
     }
     self.compLHEEnvelope         = False
     self.compTopRwgt             = compTopRwgt
@@ -377,6 +377,10 @@ class countHistogramProducer(Module):
   def clip(self, value, min_val = -10., max_val = 10.):
     return min(max(value, min_val), max_val)
 
+  def clip_lhe(self, value, min_val = -10., max_val = 10.):
+    correctiveFactor = 2. if self.nLHEScaleWeight == 8 else 1.
+    return self.clip(value * correctiveFactor, min_val, max_val)
+
   def isInitialized(self, histogramNames):
     return all(map(
       lambda histogramName: histogramName in self.histograms and \
@@ -430,7 +434,7 @@ class countHistogramProducer(Module):
     nof_lheScaleWeights = len(LHEScaleWeight)
     if nof_lheScaleWeights not in self.LHEEnvelopeIdxs:
       return (1., 1.)
-    LHEEnvelopeValues = [ self.clip(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs[nof_lheScaleWeights] ]
+    LHEEnvelopeValues = [ self.clip_lhe(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs[nof_lheScaleWeights] ]
     return [ max(LHEEnvelopeValues), min(LHEEnvelopeValues) ]
 
   def beginJob(self):
@@ -636,82 +640,6 @@ class countHistogramProducer(Module):
                 #     self.initHistograms(['CountFullWeightedNoPUL1PrefireNom{}'.format(insert_name)])
                 #   self.histograms['CountFullWeightedNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(0., genWeight * lheTHXWeight * l1_nom * topSF)
 
-              if hasattr(event, self.LHEPdfWeightName):
-                LHEPdfWeight = getattr(event, self.LHEPdfWeightName)
-
-                if len(LHEPdfWeight) != self.nLHEPdfWeight:
-                  print(
-                    "WARNING: The length of '%s' array (= %i) does not match to the expected length of %i" % \
-                    (self.LHEPdfWeightName, len(LHEPdfWeight), self.nLHEPdfWeight)
-                  )
-                  self.nLHEPdfWeight = len(LHEPdfWeight)
-
-                if 'histogram' in self.histograms['CountWeightedLHEWeightPdf{}'.format(insert_name)]:
-                  if not self.isInitialized(['CountWeightedLHEWeightPdf{}'.format(insert_name)]):
-                    self.initHistograms(['CountWeightedLHEWeightPdf{}'.format(insert_name)], self.nLHEPdfWeight)
-                  for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                    self.histograms['CountWeightedLHEWeightPdf{}'.format(insert_name)]['histogram'].Fill(
-                      float(lhe_pdf_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                    )
-                # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]:
-                #   if not self.isInitialized(['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]):
-                #     self.initHistograms(['CountFullWeightedLHEWeightPdf{}'.format(insert_name)], self.nLHEPdfWeight)
-                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                #     self.histograms['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_pdf_idx), genWeight * puWeight * lheTHXWeight * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                #     )
-
-                # if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]:
-                #   if not self.isInitialized(['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]):
-                #     self.initHistograms(['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)], self.nLHEPdfWeight)
-                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                #     self.histograms['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_pdf_idx), genWeight_sign * lheTHXWeight * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                #     )
-                # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]:
-                #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]):
-                #     self.initHistograms(['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)], self.nLHEPdfWeight)
-                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                #     self.histograms['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_pdf_idx), genWeight * lheTHXWeight * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                #     )
-
-                if has_l1Prefire:
-                  if 'histogram' in self.histograms['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]:
-                    if not self.isInitialized(['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]):
-                      self.initHistograms(['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
-                    for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                      self.histograms['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                        float(lhe_pdf_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                      )
-                  # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]:
-                  #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]):
-                  #     self.initHistograms(['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
-                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                  #     self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_pdf_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                  #     )
-
-                  # if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]:
-                  #   if not self.isInitialized(['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]):
-                  #     self.initHistograms(['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
-                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                  #     self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_pdf_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                  #     )
-                  # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]:
-                  #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]):
-                  #     self.initHistograms(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
-                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
-                  #     self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_pdf_idx), genWeight * lheTHXWeight * l1_nom * self.clip(LHEPdfWeight[lhe_pdf_idx]) * topSF
-                  #     )
-
-              else:
-                if not self.isPrinted[self.LHEPdfWeightName]:
-                  self.isPrinted[self.LHEPdfWeightName] = True
-                  print('Missing branch: %s' % self.LHEPdfWeightName)
-
               if hasattr(event, self.LHEScaleWeightName):
                 assert(self.compLHEEnvelope)
                 LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
@@ -730,14 +658,14 @@ class countHistogramProducer(Module):
                     self.initHistograms(['CountWeightedLHEWeightScale{}'.format(insert_name)], self.nLHEScaleWeight)
                   for lhe_scale_idx in range(self.nLHEScaleWeight):
                     self.histograms['CountWeightedLHEWeightScale{}'.format(insert_name)]['histogram'].Fill(
-                      float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                      float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                     )
                 # if 'histogram' in self.histograms['CountFullWeightedLHEWeightScale{}'.format(insert_name)]:
                 #   if not self.isInitialized(['CountFullWeightedLHEWeightScale{}'.format(insert_name)]):
                 #     self.initHistograms(['CountFullWeightedLHEWeightScale{}'.format(insert_name)], self.nLHEScaleWeight)
                 #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                 #     self.histograms['CountFullWeightedLHEWeightScale{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                #       float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                 #     )
 
                 # if 'histogram' in self.histograms['CountWeightedLHEWeightScaleNoPU{}'.format(insert_name)]:
@@ -745,14 +673,14 @@ class countHistogramProducer(Module):
                 #     self.initHistograms(['CountWeightedLHEWeightScaleNoPU{}'.format(insert_name)], self.nLHEScaleWeight)
                 #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                 #     self.histograms['CountWeightedLHEWeightScaleNoPU{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_scale_idx), genWeight_sign * lheTHXWeight * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                #       float(lhe_scale_idx), genWeight_sign * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                 #     )
                 # if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleNoPU{}'.format(insert_name)]:
                 #   if not self.isInitialized(['CountFullWeightedLHEWeightScaleNoPU{}'.format(insert_name)]):
                 #     self.initHistograms(['CountFullWeightedLHEWeightScaleNoPU{}'.format(insert_name)], self.nLHEScaleWeight)
                 #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                 #     self.histograms['CountFullWeightedLHEWeightScaleNoPU{}'.format(insert_name)]['histogram'].Fill(
-                #       float(lhe_scale_idx), genWeight * lheTHXWeight * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                #       float(lhe_scale_idx), genWeight * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                 #     )
 
                 if has_l1Prefire:
@@ -761,14 +689,14 @@ class countHistogramProducer(Module):
                       self.initHistograms(['CountWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)], self.nLHEScaleWeight)
                     for lhe_scale_idx in range(self.nLHEScaleWeight):
                       self.histograms['CountWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                        float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                        float(lhe_scale_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                       )
                   # if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)]:
                   #   if not self.isInitialized(['CountFullWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)]):
                   #     self.initHistograms(['CountFullWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)], self.nLHEScaleWeight)
                   #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                   #     self.histograms['CountFullWeightedLHEWeightScaleL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                  #       float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                   #     )
 
                   # if 'histogram' in self.histograms['CountWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]:
@@ -776,14 +704,14 @@ class countHistogramProducer(Module):
                   #     self.initHistograms(['CountWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEScaleWeight)
                   #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                   #     self.histograms['CountWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_scale_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                  #       float(lhe_scale_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                   #     )
                   # if 'histogram' in self.histograms['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]:
                   #   if not self.isInitialized(['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]):
                   #     self.initHistograms(['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEScaleWeight)
                   #   for lhe_scale_idx in range(self.nLHEScaleWeight):
                   #     self.histograms['CountFullWeightedLHEWeightScaleNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                  #       float(lhe_scale_idx), genWeight * lheTHXWeight * l1_nom * self.clip(LHEScaleWeight[lhe_scale_idx]) * topSF
+                  #       float(lhe_scale_idx), genWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
                   #     )
 
                 if 'histogram' in self.histograms['CountWeightedLHEEnvelope{}'.format(insert_name)]:
@@ -806,6 +734,82 @@ class countHistogramProducer(Module):
                 if not self.isPrinted[self.LHEScaleWeightName]:
                   self.isPrinted[self.LHEScaleWeightName] = True
                   print('Missing branch: %s' % self.LHEScaleWeightName)
+              
+              if hasattr(event, self.LHEPdfWeightName):
+                LHEPdfWeight = getattr(event, self.LHEPdfWeightName)
+
+                if len(LHEPdfWeight) != self.nLHEPdfWeight:
+                  print(
+                    "WARNING: The length of '%s' array (= %i) does not match to the expected length of %i" % \
+                    (self.LHEPdfWeightName, len(LHEPdfWeight), self.nLHEPdfWeight)
+                  )
+                  self.nLHEPdfWeight = len(LHEPdfWeight)
+
+                if 'histogram' in self.histograms['CountWeightedLHEWeightPdf{}'.format(insert_name)]:
+                  if not self.isInitialized(['CountWeightedLHEWeightPdf{}'.format(insert_name)]):
+                    self.initHistograms(['CountWeightedLHEWeightPdf{}'.format(insert_name)], self.nLHEPdfWeight)
+                  for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                    self.histograms['CountWeightedLHEWeightPdf{}'.format(insert_name)]['histogram'].Fill(
+                      float(lhe_pdf_idx), genWeight_sign * puWeight * lheTHXWeight * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                    )
+                # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]:
+                #   if not self.isInitialized(['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]):
+                #     self.initHistograms(['CountFullWeightedLHEWeightPdf{}'.format(insert_name)], self.nLHEPdfWeight)
+                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                #     self.histograms['CountFullWeightedLHEWeightPdf{}'.format(insert_name)]['histogram'].Fill(
+                #       float(lhe_pdf_idx), genWeight * puWeight * lheTHXWeight * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                #     )
+
+                # if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]:
+                #   if not self.isInitialized(['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]):
+                #     self.initHistograms(['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)], self.nLHEPdfWeight)
+                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                #     self.histograms['CountWeightedLHEWeightPdfNoPU{}'.format(insert_name)]['histogram'].Fill(
+                #       float(lhe_pdf_idx), genWeight_sign * lheTHXWeight * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                #     )
+                # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]:
+                #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]):
+                #     self.initHistograms(['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)], self.nLHEPdfWeight)
+                #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                #     self.histograms['CountFullWeightedLHEWeightPdfNoPU{}'.format(insert_name)]['histogram'].Fill(
+                #       float(lhe_pdf_idx), genWeight * lheTHXWeight * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                #     )
+
+                if has_l1Prefire:
+                  if 'histogram' in self.histograms['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]:
+                    if not self.isInitialized(['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]):
+                      self.initHistograms(['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
+                    for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                      self.histograms['CountWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                        float(lhe_pdf_idx), genWeight_sign * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                      )
+                  # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]:
+                  #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]):
+                  #     self.initHistograms(['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
+                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                  #     self.histograms['CountFullWeightedLHEWeightPdfL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                  #       float(lhe_pdf_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                  #     )
+
+                  # if 'histogram' in self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]:
+                  #   if not self.isInitialized(['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]):
+                  #     self.initHistograms(['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
+                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                  #     self.histograms['CountWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                  #       float(lhe_pdf_idx), genWeight_sign * lheTHXWeight * l1_nom * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                  #     )
+                  # if 'histogram' in self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]:
+                  #   if not self.isInitialized(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]):
+                  #     self.initHistograms(['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)], self.nLHEPdfWeight)
+                  #   for lhe_pdf_idx in range(self.nLHEPdfWeight):
+                  #     self.histograms['CountFullWeightedLHEWeightPdfNoPUL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
+                  #       float(lhe_pdf_idx), genWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEPdfWeight[lhe_pdf_idx]) * topSF
+                  #     )
+
+              else:
+                if not self.isPrinted[self.LHEPdfWeightName]:
+                  self.isPrinted[self.LHEPdfWeightName] = True
+                  print('Missing branch: %s' % self.LHEPdfWeightName)
 
               nof_PSweight = getattr(event, self.PSWeightCountName, 0)
               if nof_PSweight == self.nPSWeight_required:
