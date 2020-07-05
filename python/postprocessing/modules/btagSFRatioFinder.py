@@ -25,6 +25,15 @@ class btagSFRatioFinder(Module):
         self.njets = 16
         self.njets_array = array.array('f', list(range(self.njets)))
         self.jetIdCut = 1 if self.era == 2016 else 2
+
+        btagLooseCuts  = { 2016 : 0.2217, 2017 : 0.1522, 2018 : 0.1241 }
+        btagMediumCuts = { 2016 : 0.6321, 2017 : 0.4941, 2018 : 0.4184 }
+        self.btagLooseCut = btagLooseCuts[self.era]
+        self.btagMediumCut = btagMediumCuts[self.era]
+
+        self.mu_wp = 0.85
+        self.ele_wp = 0.80
+
         self.btagSF_branch = 'btagSF_deepjet_shape'
         self.branchMap = collections.OrderedDict([
             ( 'none',    { 'pt' : '',             'btag' : '' } ),
@@ -67,6 +76,8 @@ class btagSFRatioFinder(Module):
                 self.branchMap[jer_key] = { 'pt' : 'jer{}'.format(shift), 'btag' : '' }
                 self.jer_keys.append(jer_key)
 
+        self.useFakeable = True
+
     def beginJob(self):
         pass
 
@@ -84,7 +95,7 @@ class btagSFRatioFinder(Module):
                 break
         return has_overlap
 
-    def select_mu(self, muon):
+    def preselect_mu(self, muon):
         return muon.pt >= 5. and \
                abs(muon.eta) <= 2.4 and \
                abs(muon.dxy) <= 0.05 and \
@@ -92,7 +103,7 @@ class btagSFRatioFinder(Module):
                muon.miniPFRelIso_all <= 0.4 and \
                muon.sip3d <= 8.
 
-    def select_ele(self, ele, muons):
+    def preselect_ele(self, ele, muons):
         return ele.pt >= 7. and \
                abs(ele.eta) <= 2.5 and \
                abs(ele.dxy) <= abs(ele.dz) < 0.1 and \
@@ -104,6 +115,49 @@ class btagSFRatioFinder(Module):
 
     def preselect_jet(self, jet):
         return abs(jet.eta) <= 2.4 and jet.jetId >= self.jetIdCut
+
+    def cone_pt(self, lep, wp):
+        return lep.pt * (1. if lep.mvaTTH >= wp else 0.9 / lep.jetPtRatio)
+
+    def btag_cut(self, muon):
+        jetpt = muon.pt * 0.9 / muon.jetPtRatio
+        btagWP = min(max(0., jetpt - 20.) / 25., 1.)
+        return btagWP * self.btagLooseCut + (1. - btagWP) * self.btagMediumCut
+
+    def fakeableselect_mu(self, muon):
+        return self.preselect_mu(muon) and \
+               self.cone_pt(muon, self.mu_wp) >= 10. and \
+               muon.assocJetBtag_DeepJet <= self.btagMediumCut and \
+               (
+                   True if muon.mvaTTH > self.mu_wp else (
+                       muon.jetPtRatio >= 2. / 3 and
+                       muon.assocJetBtag_DeepJet <= self.btag_cut(muon)
+                   )
+               )
+
+    def hlt_cut(self, ele):
+        sieie_cut = 0.011 if abs(ele.eta) <= 1.479 else 0.030
+        return ele.hoe <= 0.10 and ele.eInvMinusPInv >= -0.04 and ele.sieie <= sieie_cut
+
+    def fakeableselect_ele(self, ele, muons):
+        return self.preselect_ele(ele, muons) and \
+               self.cone_pt(ele, self.ele_wp) and \
+               ele.lostHits == 0 and \
+               ele.convVeto and \
+               ele.assocJetBtag_DeepJet <= self.btagMediumCut and \
+               self.hlt_cut(ele) and \
+               (
+                   True if ele.mvaTTH > self.ele_wp else (
+                           ele.jetPtRatio >= 1. / 1.7 and
+                           ele.mvaFall17V2noIso_WP80
+                   )
+               )
+
+    def select_mu(self, muon):
+        return self.fakeableselect_mu(muon) if self.useFakeable else self.preselect_mu(muon)
+
+    def select_ele(self, ele, muons):
+        return self.fakeableselect_ele(ele, muons) if self.useFakeable else self.preselect_ele(ele, muons)
 
     def select_jet(self, jet, sysKey):
         if sysKey not in self.jer_keys:
@@ -159,10 +213,10 @@ class btagSFRatioFinder(Module):
             l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
         nominalWeight = genWeight_sign * puWeight * l1PrefiringWeight
 
-        muons_loose = [ mu for mu in muons if self.select_mu(mu) ]
-        eles_loose = [ ele for ele in eles if self.select_ele(ele, muons_loose) ]
-        jet_idxs_overlap_mu = [ mu.jetIdx for mu in muons_loose if mu.jetIdx >= 0 ]
-        jet_idxs_overlap_ele = [ ele.jetIdx for ele in eles_loose if ele.jetIdx >= 0 ]
+        muons_sel = [ mu for mu in muons if self.select_mu(mu) ]
+        eles_sel = [ ele for ele in eles if self.select_ele(ele, muons_sel) ]
+        jet_idxs_overlap_mu = [ mu.jetIdx for mu in muons_sel if mu.jetIdx >= 0 ]
+        jet_idxs_overlap_ele = [ ele.jetIdx for ele in eles_sel if ele.jetIdx >= 0 ]
         jet_idxs_overlap = list(sorted(set(jet_idxs_overlap_mu) | set(jet_idxs_overlap_ele)))
         jets_cleaned = [ jet for jet in jets if jet.jetIdx not in jet_idxs_overlap and self.preselect_jet(jet) ]
 
