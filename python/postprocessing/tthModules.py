@@ -13,6 +13,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.binnedEventCountProducer im
 from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer import trigObjMatcher
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017, puHist2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.egammaIdProducer import egammaId
+from tthAnalysis.NanoAODTools.postprocessing.modules.btagSFRatioFinder import btagSFRatio2016, btagSFRatio2017, btagSFRatio2018
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight2016, puWeight2017, puWeight2018
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 
