@@ -34,6 +34,18 @@ class btagSFRatioFinder(Module):
             ( 'JERUp',   { 'pt' : 'jerUp',        'btag' : '' }),
             ( 'JERDown', { 'pt' : 'jerDown',      'btag' : '' }),
         ])
+        btag_list = collections.OrderedDict([
+            ('HF', 'hf'), ('HFStats1', 'hfstats1'), ('HFStats2', 'hfstats2'),
+            ('LF', 'lf'), ('LFStats1', 'lfstats1'), ('LFStats2', 'lfstats2'),
+            ('cErr1', 'cferr1'),
+            ('cErr2', 'cferr2'),
+        ])
+        for btag_sys in btag_list:
+            for shift in [ 'Up', 'Down' ]:
+                sys_key = '{}{}'.format(btag_sys, shift)
+                btag_branch = '{}_{}'.format(shift.lower(), btag_list[btag_sys])
+                assert(sys_key not in self.branchMap)
+                self.branchMap[sys_key] = { 'pt' : 'nom', 'btag' : btag_branch }
         jes_list = [
             'JESAbsolute', 'JESAbsolute_{}'.format(self.era), 'JESBBEC1', 'JESBBEC1_{}'.format(era),
             'JESEC2', 'JESEC2_{}'.format(era), 'JESFlavorQCD', 'JESHF', 'JESHF_{}'.format(era),
