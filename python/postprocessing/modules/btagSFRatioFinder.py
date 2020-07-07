@@ -16,6 +16,7 @@ class btagSFRatioFinder(Module):
         self.genWeightBranchName = "genWeight"
         self.puWeightBranchName = "puWeight"
         self.l1prefireWeightBranchName = "L1PreFiringWeight_Nom"
+        self.topPtRwgtBranchName = "topPtRwgt_Quadratic"
         self.era = era
         self.out = None
         self.outputFileName = outputFn
@@ -211,7 +212,8 @@ class btagSFRatioFinder(Module):
         l1PrefiringWeight = 1.
         if self.era != 2018:
             l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
-        nominalWeight = genWeight_sign * puWeight * l1PrefiringWeight
+        topPtRwgt = getattr(event, self.topPtRwgtBranchName, 1.)
+        nominalWeight = genWeight_sign * puWeight * l1PrefiringWeight * topPtRwgt
 
         muons_sel = [ mu for mu in muons if self.select_mu(mu) ]
         eles_sel = [ ele for ele in eles if self.select_ele(ele, muons_sel) ]
