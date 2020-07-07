@@ -78,6 +78,7 @@ class btagSFRatioFinder(Module):
                 self.jer_keys.append(jer_key)
 
         self.useFakeable = True
+        self.useGenWeightSignOnly = True
 
     def beginJob(self):
         pass
@@ -213,7 +214,8 @@ class btagSFRatioFinder(Module):
         if self.era != 2018:
             l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
         topPtRwgt = getattr(event, self.topPtRwgtBranchName, 1.)
-        nominalWeight = genWeight_sign * puWeight * l1PrefiringWeight * topPtRwgt
+        nominalWeight = genWeight_sign if self.useGenWeightSignOnly else genWeight
+        nominalWeight *= puWeight * l1PrefiringWeight * topPtRwgt
 
         muons_sel = [ mu for mu in muons if self.select_mu(mu) ]
         eles_sel = [ ele for ele in eles if self.select_ele(ele, muons_sel) ]
