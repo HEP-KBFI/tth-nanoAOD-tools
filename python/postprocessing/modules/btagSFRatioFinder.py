@@ -213,7 +213,9 @@ class btagSFRatioFinder(Module):
         l1PrefiringWeight = 1.
         if self.era != 2018:
             l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
-        topPtRwgt = getattr(event, self.topPtRwgtBranchName, 1.)
+        topPtRwgt = 1.
+        if hasattr(event, self.topPtRwgtBranchName):
+            topPtRwgt = getattr(event, self.topPtRwgtBranchName)
         nominalWeight = genWeight_sign if self.useGenWeightSignOnly else genWeight
         nominalWeight *= puWeight * l1PrefiringWeight * topPtRwgt
 
