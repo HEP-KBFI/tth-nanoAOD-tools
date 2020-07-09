@@ -27,8 +27,8 @@ class btagSFRatioFinder(Module):
         self.njets_array = array.array('f', list(range(self.njets)))
         self.jetIdCut = 1 if self.era == 2016 else 2
 
-        btagLooseCuts  = { 2016 : 0.2217, 2017 : 0.1522, 2018 : 0.1241 }
-        btagMediumCuts = { 2016 : 0.6321, 2017 : 0.4941, 2018 : 0.4184 }
+        btagLooseCuts  = { 2016 : 0.0614, 2017 : 0.0521, 2018 : 0.0494 }
+        btagMediumCuts = { 2016 : 0.3093, 2017 : 0.3033, 2018 : 0.2770 }
         self.btagLooseCut = btagLooseCuts[self.era]
         self.btagMediumCut = btagMediumCuts[self.era]
 
@@ -79,7 +79,6 @@ class btagSFRatioFinder(Module):
 
         self.useFakeable = True
         self.useGenWeightSignOnly = True
-        self.verbose = False
 
     def beginJob(self):
         pass
@@ -109,7 +108,8 @@ class btagSFRatioFinder(Module):
     def preselect_ele(self, ele, muons):
         return ele.pt >= 7. and \
                abs(ele.eta) <= 2.5 and \
-               abs(ele.dxy) <= abs(ele.dz) < 0.1 and \
+               abs(ele.dxy) <= 0.05 and \
+               abs(ele.dz) < 0.1 and \
                ele.miniPFRelIso_all <= 0.4 and \
                ele.sip3d <= 8. and \
                ele.mvaFall17V2noIso_WPL and \
@@ -144,7 +144,7 @@ class btagSFRatioFinder(Module):
 
     def fakeableselect_ele(self, ele, muons):
         return self.preselect_ele(ele, muons) and \
-               self.cone_pt(ele, self.ele_wp) and \
+               self.cone_pt(ele, self.ele_wp) >= 10. and \
                ele.lostHits == 0 and \
                ele.convVeto and \
                ele.assocJetBtag_DeepJet <= self.btagMediumCut and \
@@ -220,8 +220,10 @@ class btagSFRatioFinder(Module):
         nominalWeight = genWeight_sign if self.useGenWeightSignOnly else genWeight
         nominalWeight *= puWeight * l1PrefiringWeight * topPtRwgt
 
-        muons_sel = [ mu for mu in muons if self.select_mu(mu) ]
-        eles_sel = [ ele for ele in eles if self.select_ele(ele, muons_sel) ]
+        muons_loose = [ mu for mu in muons if self.preselect_mu(mu) ]
+        muons_sel = [ mu for mu in muons_loose if self.select_mu(mu) ]
+        eles_loose = [ ele for ele in eles if self.preselect_ele(ele, muons_loose) ]
+        eles_sel = [ ele for ele in eles_loose if self.select_ele(ele, muons_loose) ]
         jet_idxs_overlap_mu = [ mu.jetIdx for mu in muons_sel if mu.jetIdx >= 0 ]
         jet_idxs_overlap_ele = [ ele.jetIdx for ele in eles_sel if ele.jetIdx >= 0 ]
         jet_idxs_overlap = list(sorted(set(jet_idxs_overlap_mu) | set(jet_idxs_overlap_ele)))
@@ -235,12 +237,6 @@ class btagSFRatioFinder(Module):
             btagSFs = [ getattr(jet, btag_branch) for jet in jets_loose ]
             btagWeight = reduce(lambda x, y: x * y, btagSFs, 1.)
             nominalWeight_times_btagWeight = nominalWeight * btagWeight
-
-            if self.verbose and sysKey == 'none':
-                print("DEBUG:{},{},{},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{},{},{},{:.3f},{:.3f}".format(
-                    event.run, event.luminosityBlock, event.event, genWeight_sign, puWeight, l1PrefiringWeight, topPtRwgt,
-                    nominalWeight, len(muons_sel), len(eles_sel), len(jets_loose), btagWeight, nominalWeight_times_btagWeight,
-                ))
 
             histKey = self.getHistKey(sysKey)
             self.hists_woBtag[histKey].Fill(njets_sel, nominalWeight)
