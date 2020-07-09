@@ -79,6 +79,7 @@ class btagSFRatioFinder(Module):
 
         self.useFakeable = True
         self.useGenWeightSignOnly = True
+        self.verbose = False
 
     def beginJob(self):
         pass
@@ -233,7 +234,13 @@ class btagSFRatioFinder(Module):
             njets_sel = min(len(jets_loose), self.njets - 1)
             btagSFs = [ getattr(jet, btag_branch) for jet in jets_loose ]
             btagWeight = reduce(lambda x, y: x * y, btagSFs, 1.)
-            nominalWeight_times_btagWeight = genWeight_sign * btagWeight
+            nominalWeight_times_btagWeight = nominalWeight * btagWeight
+
+            if self.verbose and sysKey == 'none':
+                print("DEBUG:{},{},{},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{},{},{},{:.3f},{:.3f}".format(
+                    event.run, event.luminosityBlock, event.event, genWeight_sign, puWeight, l1PrefiringWeight, topPtRwgt,
+                    nominalWeight, len(muons_sel), len(eles_sel), len(jets_loose), btagWeight, nominalWeight_times_btagWeight,
+                ))
 
             histKey = self.getHistKey(sysKey)
             self.hists_woBtag[histKey].Fill(njets_sel, nominalWeight)
