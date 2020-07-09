@@ -15,7 +15,11 @@ class btagSFRatioFinder(Module):
         self.electronBranchName = "Electron"
         self.genWeightBranchName = "genWeight"
         self.puWeightBranchName = "puWeight"
+        self.puWeightBranchNameUp = "puWeightUp"
+        self.puWeightBranchNameDown = "puWeightDown"
         self.l1prefireWeightBranchName = "L1PreFiringWeight_Nom"
+        self.l1prefireWeightBranchNameUp = "L1PreFiringWeight_Up"
+        self.l1prefireWeightBranchNameDown = "L1PreFiringWeight_Dn"
         self.topPtRwgtBranchName = "topPtRwgt_Quadratic"
         self.era = era
         self.out = None
@@ -76,6 +80,13 @@ class btagSFRatioFinder(Module):
                 assert(jer_key not in self.branchMap)
                 self.branchMap[jer_key] = { 'pt' : 'jer{}'.format(shift), 'btag' : '' }
                 self.jer_keys.append(jer_key)
+
+        nonJet_sysList = [ 'pileup', 'l1PreFire', 'topPtReweighting' ]
+        for nonJet_sys in nonJet_sysList:
+            for shift in [ 'Up', 'Down' ]:
+                sys_key = '{}{}'.format(nonJet_sys, shift)
+                assert(sys_key not in self.branchMap)
+                self.branchMap[sys_key] = { 'pt' : 'nom', 'btag' : '' }
 
         self.useFakeable = True
         self.useGenWeightSignOnly = True
@@ -210,26 +221,42 @@ class btagSFRatioFinder(Module):
 
         genWeight = getattr(event, self.genWeightBranchName)
         genWeight_sign = 1. if genWeight > 0. else -1.
-        puWeight = getattr(event, self.puWeightBranchName)
-        l1PrefiringWeight = 1.
-        if self.era != 2018:
-            l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
-        topPtRwgt = 1.
-        if hasattr(event, self.topPtRwgtBranchName):
-            topPtRwgt = getattr(event, self.topPtRwgtBranchName)
-        nominalWeight = genWeight_sign if self.useGenWeightSignOnly else genWeight
-        nominalWeight *= puWeight * l1PrefiringWeight * topPtRwgt
 
         muons_loose = [ mu for mu in muons if self.preselect_mu(mu) ]
         muons_sel = [ mu for mu in muons_loose if self.select_mu(mu) ]
-        eles_loose = [ ele for ele in eles if self.preselect_ele(ele, muons_loose) ]
-        eles_sel = [ ele for ele in eles_loose if self.select_ele(ele, muons_loose) ]
+        eles_sel = [ ele for ele in eles if self.select_ele(ele, muons_loose) ]
         jet_idxs_overlap_mu = [ mu.jetIdx for mu in muons_sel if mu.jetIdx >= 0 ]
         jet_idxs_overlap_ele = [ ele.jetIdx for ele in eles_sel if ele.jetIdx >= 0 ]
         jet_idxs_overlap = list(sorted(set(jet_idxs_overlap_mu) | set(jet_idxs_overlap_ele)))
         jets_cleaned = [ jet for jet in jets if jet.jetIdx not in jet_idxs_overlap and self.preselect_jet(jet) ]
 
         for sysKey in self.branchMap:
+            if sysKey == 'pileupUp':
+                puWeight = getattr(event, self.puWeightBranchNameUp)
+            elif sysKey == 'pileupDown':
+                puWeight = getattr(event, self.puWeightBranchNameDown)
+            else:
+                puWeight = getattr(event, self.puWeightBranchName)
+            l1PrefiringWeight = 1.
+            if self.era != 2018:
+                if sysKey == 'l1PreFireUp':
+                    l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchNameUp)
+                if sysKey == 'l1PreFireDown':
+                    l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchNameDown)
+                else:
+                    l1PrefiringWeight = getattr(event, self.l1prefireWeightBranchName)
+            topPtRwgt = 1.
+            if hasattr(event, self.topPtRwgtBranchName):
+                topPtRwgt = getattr(event, self.topPtRwgtBranchName)
+                if sysKey == 'topPtReweightingUp':
+                    topPtRwgt *= topPtRwgt
+                elif sysKey == 'topPtReweightingDown':
+                    topPtRwgt = 1.
+                else:
+                    pass
+            nominalWeight = genWeight_sign if self.useGenWeightSignOnly else genWeight
+            nominalWeight *= puWeight * l1PrefiringWeight * topPtRwgt
+
             btag_branch = '{}_{}'.format(self.btagSF_branch, self.branchMap[sysKey]['btag']) if self.branchMap[sysKey]['btag'] else self.btagSF_branch
 
             jets_loose = [ jet for jet in jets_cleaned if self.select_jet(jet, sysKey) ]
