@@ -9,16 +9,19 @@ class mllVarProducer(Module):
 
     def __init__(self, mode):
         modes = {
-            'wzto3lnu' : [ 2, 3 ],
+            'wzto3lnu'          : { 'idxs' : [ 2, 3 ], 'min_mll' : -1. },
+            'wzto3lnu_mllmin01' : { 'idxs' : [ 4, 5 ], 'min_mll' :  4. },
         }
         if mode not in modes:
             raise ValueError("No such mode available: %s" % mode)
-        leptonIdxs = modes[mode]
+        choice = modes[mode]
+        leptonIdxs = choice['idxs']
         self.minCollectionSize = max(leptonIdxs) + 1
         self.firstLeptonIdx = leptonIdxs[0]
         self.secondLeptonIdx = leptonIdxs[1]
         self.lhePartName = 'LHEPart'
         self.mllBranchName = 'LHE_mll'
+        self.min_mll = choice['min_mll']
 
     def beginJob(self):
         pass
@@ -54,8 +57,9 @@ class mllVarProducer(Module):
 
         self.out.fillBranch(self.mllBranchName, mll)
 
-        return True
+        return (self.min_mll > 0. and mll >= self.min_mll) or self.min_mll < 0.
 
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-mllWZTo3LNu = lambda: mllVarProducer(mode = 'wzto3lnu')
+mllWZTo3LNu          = lambda: mllVarProducer(mode = 'wzto3lnu')
+mllWZTo3LNu_mllmin01 = lambda: mllVarProducer(mode = 'wzto3lnu_mllmin01')
