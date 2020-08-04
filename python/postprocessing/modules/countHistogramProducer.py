@@ -11,7 +11,7 @@ from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
 class countHistogramProducer(Module):
 
-  def __init__(self, compTopRwgt, compHTXS, splitByLHENjet):
+  def __init__(self, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -45,13 +45,15 @@ class countHistogramProducer(Module):
     self.genTopCollectionName    = "GenTop"
     self.compHTXS                = compHTXS
     self.splitByLHENjet          = splitByLHENjet
+    self.splitByLHEHT            = splitByLHEHT
     self.htxsBranchName          = "HTXS_Higgs"
     self.htxsPtBranchName        = "%s_pt" % self.htxsBranchName
     self.htxsEtaBranchName       = "%s_y" % self.htxsBranchName
     self.LHENjetsBranchName      = "LHE_Njets"
+    self.LHEHTBranchName         = "LHE_HT"
 
-    if self.compHTXS and self.splitByLHENjet:
-      raise ValueError("Cannot enable HTXS binning and LHE Njet binning simultanteously")
+    if self.compHTXS and (self.splitByLHENjet or self.splitByLHEHT):
+      raise ValueError("Cannot enable HTXS binning and LHE binning simultanteously")
 
     self.ISR_down_idx = 0
     self.FSR_down_idx = 1
@@ -72,15 +74,27 @@ class countHistogramProducer(Module):
     ])
 
     self.lheNjets = collections.OrderedDict([
-      ("LHENjet0_pos", lambda lheNjet, genWeight: lheNjet == 0 and genWeight > 0.),
-      ("LHENjet0_neg", lambda lheNjet, genWeight: lheNjet == 0 and genWeight < 0.),
-      ("LHENjet1_pos", lambda lheNjet, genWeight: lheNjet == 1 and genWeight > 0.),
-      ("LHENjet1_neg", lambda lheNjet, genWeight: lheNjet == 1 and genWeight < 0.),
-      ("LHENjet2_pos", lambda lheNjet, genWeight: lheNjet == 2 and genWeight > 0.),
-      ("LHENjet2_neg", lambda lheNjet, genWeight: lheNjet == 2 and genWeight < 0.),
-      ("LHENjet3_pos", lambda lheNjet, genWeight: lheNjet == 3 and genWeight > 0.),
-      ("LHENjet3_neg", lambda lheNjet, genWeight: lheNjet == 3 and genWeight < 0.),
+      ("LHENjet0", lambda lheNjet: lheNjet == 0),
+      ("LHENjet1", lambda lheNjet: lheNjet == 1),
+      ("LHENjet2", lambda lheNjet: lheNjet == 2),
+      ("LHENjet3", lambda lheNjet: lheNjet == 3),
+      ("LHENjet4", lambda lheNjet: lheNjet == 4),
     ])
+    self.lheHT = collections.OrderedDict([
+      ("LHEHT0to70",      lambda lhe_HT:          lhe_HT <   70.),
+      ("LHEHT70to100",    lambda lhe_HT:   70. <= lhe_HT <  100.),
+      ("LHEHT100to200",   lambda lhe_HT:  100. <= lhe_HT <  200.),
+      ("LHEHT200to400",   lambda lhe_HT:  200. <= lhe_HT <  400.),
+      ("LHEHT400to600",   lambda lhe_HT:  400. <= lhe_HT <  600.),
+      ("LHEHT600to800",   lambda lhe_HT:  600. <= lhe_HT <  800.),
+      ("LHEHT800to1200",  lambda lhe_HT:  800. <= lhe_HT < 1200.),
+      ("LHEHT1200to2500", lambda lhe_HT: 1200. <= lhe_HT < 2500.),
+      ("LHEHT2500toInf",  lambda lhe_HT: 2500. <= lhe_HT        ),
+    ])
+    self.lheNjetsHT = []
+    for lheNjet_key in self.lheNjets:
+      for lheHT_key in self.lheHT:
+        self.lheNjetsHT.append('{}_{}'.format(lheNjet_key, lheHT_key))
 
     if self.compTopRwgt:
       print("Computing top reweighting: %s" % self.compTopRwgt)
@@ -118,8 +132,12 @@ class countHistogramProducer(Module):
     self.aux_binning = [ "" ]
     if self.compHTXS:
       self.aux_binning.extend(list(self.htxs.keys()))
-    elif self.splitByLHENjet:
+    elif self.splitByLHENjet and not self.splitByLHEHT:
       self.aux_binning.extend(list(self.lheNjets.keys()))
+    elif self.splitByLHEHT and not self.splitByLHENjet:
+      self.aux_binning.extend(list(self.lheHT.keys()))
+    elif self.splitByLHENjet and self.splitByLHEHT:
+      self.aux_binning.extend(self.lheNjetsHT)
 
     for topPtRwgtIdx, topPtRwgtLabel in enumerate(self.topPtRwgtLabels):
       for lheTHXSMWeightIndex in self.lheTHXSMWeightIndices:
@@ -136,10 +154,23 @@ class countHistogramProducer(Module):
             insert_name += "_%s" % aux_bin
             if self.compHTXS:
               aux_bin_name = aux_bin.replace('pt', 'Higgs pt ').replace('to', '-').replace('Gt', '> ').replace('fwd', 'forward Higgs')
-            elif self.splitByLHENjet:
-              aux_bin_split = aux_bin.split('_')
-              assert(aux_bin_split[1] in [ 'pos', 'neg' ])
-              aux_bin_name = 'LHENjets == {}, genWeight {} 0'.format(aux_bin_split[0][-1], '>' if aux_bin_split[1] == 'pos' else '<')
+            elif self.splitByLHENjet and not self.splitByLHEHT:
+              aux_bin_name = 'LHENjets == {}'.format(aux_bin[-1])
+            elif self.splitByLHEHT and not self.splitByLHENjet:
+              aux_bin_split = aux_bin[len('LHEHT'):].split('to')
+              if aux_bin_split[1] != 'Inf':
+                aux_bin_name = '{} <= LHEHT < {}'.format(*aux_bin_split)
+              else:
+                aux_bin_name = 'LHEHT >= {}'.format(aux_bin_split[0])
+            elif self.splitByLHENjet and self.splitByLHEHT:
+              aux_bin_njet, aux_bin_ht = aux_bin.split('_')
+              aux_bin_name_njet = 'LHENjets == {}'.format(aux_bin_njet[-1])
+              aux_bin_split = aux_bin_ht[len('LHEHT'):].split('to')
+              if aux_bin_split[1] != 'Inf':
+                aux_bin_name_ht = '{} <= LHEHT < {}'.format(*aux_bin_split)
+              else:
+                aux_bin_name_ht = 'LHEHT >= {}'.format(aux_bin_split[0])
+              aux_bin_name = '{} and {}'.format(aux_bin_name_njet, aux_bin_name_ht)
             else:
               assert(False)
             suffix_title += " (%s)" % aux_bin_name
@@ -489,7 +520,7 @@ class countHistogramProducer(Module):
     for aux_bin in self.aux_binning:
 
       if aux_bin:
-        assert(self.compHTXS or self.splitByLHENjet)
+        assert(self.compHTXS or self.splitByLHENjet or self.splitByLHEHT)
         if self.compHTXS:
           assert(aux_bin in self.htxs)
           if not hasattr(event, self.htxsPtBranchName):
@@ -500,15 +531,33 @@ class countHistogramProducer(Module):
           htxs_eta = getattr(event, self.htxsEtaBranchName)
           if not self.htxs[aux_bin](htxs_pt, htxs_eta):
             continue
-        elif self.splitByLHENjet:
+        elif self.splitByLHENjet and not self.splitByLHEHT:
           assert(aux_bin in self.lheNjets)
           if not hasattr(event, self.LHENjetsBranchName):
             raise RuntimeError("No such branch: %s" % self.LHENjetsBranchName)
-          assert(hasattr(event, self.genWeightName))
-          genWeight = getattr(event, self.genWeightName)
-          genWeight_sign = np.sign(genWeight)
           lhe_njets = getattr(event, self.LHENjetsBranchName)
-          if not self.lheNjets[aux_bin](lhe_njets, genWeight_sign):
+          if not self.lheNjets[aux_bin](lhe_njets):
+            continue
+        elif self.splitByLHEHT and not self.splitByLHENjet:
+          assert(aux_bin in self.lheHT)
+          if not hasattr(event, self.LHEHTBranchName):
+            raise RuntimeError("No such branch: %s" % self.LHEHTBranchName)
+          lhe_ht = getattr(event, self.LHEHTBranchName)
+          if not self.lheHT[aux_bin](lhe_ht):
+            continue
+        elif self.splitByLHENjet and self.splitByLHEHT:
+          assert(aux_bin in self.lheNjetsHT)
+          if not hasattr(event, self.LHEHTBranchName):
+            raise RuntimeError("No such branch: %s" % self.LHEHTBranchName)
+          lhe_ht = getattr(event, self.LHEHTBranchName)
+          if not hasattr(event, self.LHENjetsBranchName):
+            raise RuntimeError("No such branch: %s" % self.LHENjetsBranchName)
+          lhe_njets = getattr(event, self.LHENjetsBranchName)
+          aux_bin_split = aux_bin.split('_')
+          matches_lhe_njets = self.lheNjets[aux_bin_split[0]](lhe_njets)
+          matches_lhe_ht = self.lheHT[aux_bin_split[1]](lhe_ht)
+          matches_lhe_njets_ht = matches_lhe_njets and matches_lhe_ht
+          if not matches_lhe_njets_ht:
             continue
         else:
           assert(False)
@@ -868,15 +917,15 @@ class countHistogramProducer(Module):
                   self.isPrinted[self.PSWeightCountName] = True
                   print('Missing branch: %s' % self.PSWeightCountName)
 
-      else:
-        if not self.isPrinted[self.puWeightName]:
-          self.isPrinted[self.puWeightName] = True
-          print('Missing branch: %s' % self.puWeightName)
+        else:
+          if not self.isPrinted[self.puWeightName]:
+            self.isPrinted[self.puWeightName] = True
+            print('Missing branch: %s' % self.puWeightName)
 
-    else:
-      if not self.isPrinted[self.genWeightName]:
-        self.isPrinted[self.genWeightName] = True
-        print('Missing branch: %s' % self.genWeightName)
+      else:
+        if not self.isPrinted[self.genWeightName]:
+          self.isPrinted[self.genWeightName] = True
+          print('Missing branch: %s' % self.genWeightName)
 
     if self.compTopRwgt:
       for topPtRwgtIdx, choice in enumerate(self.topPtRwgtChoices):
@@ -888,7 +937,9 @@ class countHistogramProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll               = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False)
-countHistogramAllCompTopRwgt    = lambda: countHistogramProducer(compTopRwgt = True,  compHTXS = False, splitByLHENjet = False)
-countHistogramAllCompHTXS       = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = True,  splitByLHENjet = False)
-countHistogramAllSplitByLHENjet = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True)
+countHistogramAll                 = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllCompTopRwgt      = lambda: countHistogramProducer(compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllCompHTXS         = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllSplitByLHENjet   = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
+countHistogramAllSplitByLHEHT     = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
+countHistogramAllSplitByLHENjetHT = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
