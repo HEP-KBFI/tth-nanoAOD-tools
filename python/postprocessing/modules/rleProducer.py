@@ -1,15 +1,12 @@
 import ROOT
-import math, os, re
+import os.path, re
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 
-from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 
 class rleProducer(Module):
 
     def __init__(self):
-        # define lepton and jet branches and branch used to access energy densitity rho
-        # (the latter is needed to compute L1 jet energy corrections)
         self.run_nr = 0
         self.run_brName = "run"
         self.ls_brName = "luminosityBlock"
