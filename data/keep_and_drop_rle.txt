@@ -1,0 +1,3 @@
+keep *
+drop run
+drop luminosityBlock
