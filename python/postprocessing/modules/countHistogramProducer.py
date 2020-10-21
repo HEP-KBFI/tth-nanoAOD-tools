@@ -11,7 +11,7 @@ from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
 class countHistogramProducer(Module):
 
-  def __init__(self, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
+  def __init__(self, refGenWeight, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -51,6 +51,8 @@ class countHistogramProducer(Module):
     self.htxsEtaBranchName       = "%s_y" % self.htxsBranchName
     self.LHENjetsBranchName      = "LHE_Njets"
     self.LHEHTBranchName         = "LHE_HT"
+    self.ref_genWeight           = abs(float(refGenWeight))
+    self.ref_genWeight_limit     = 3
 
     if self.compHTXS and (self.splitByLHENjet or self.splitByLHEHT):
       raise ValueError("Cannot enable HTXS binning and LHE binning simultanteously")
@@ -292,6 +294,12 @@ class countHistogramProducer(Module):
     correctiveFactor = 2. if self.nLHEScaleWeight == 8 else 1.
     return self.clip(value * correctiveFactor, min_val, max_val)
 
+  def clip_genWeight(self, genWeight):
+    assert(self.ref_genWeight > 0.)
+    max_val = self.ref_genWeight_limit * self.ref_genWeight
+    min_val = -max_val
+    return self.clip(genWeight, min_val = min_val, max_val = max_val)
+
   def isInitialized(self, histogramNames):
     return all(map(
       lambda histogramName: histogramName in self.histograms and \
@@ -449,7 +457,7 @@ class countHistogramProducer(Module):
 
       if hasattr(event, self.genWeightName):
         for fullGenWeight in self.useFullGenWeight:
-          genWeight_full = getattr(event, self.genWeightName) #TODO clip wrt the reference weight
+          genWeight_full = self.clip_genWeight(getattr(event, self.genWeightName))
           genWeight_sign = np.sign(genWeight_full)
           genWeight = genWeight_full if fullGenWeight else genWeight_sign
 
@@ -682,9 +690,9 @@ class countHistogramProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll                 = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllCompTopRwgt      = lambda: countHistogramProducer(compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllCompHTXS         = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllSplitByLHENjet   = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
-countHistogramAllSplitByLHEHT     = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
-countHistogramAllSplitByLHENjetHT = lambda: countHistogramProducer(compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
+countHistogramAll                 = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllCompTopRwgt      = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllCompHTXS         = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
+countHistogramAllSplitByLHENjet   = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
+countHistogramAllSplitByLHEHT     = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
+countHistogramAllSplitByLHENjetHT = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
