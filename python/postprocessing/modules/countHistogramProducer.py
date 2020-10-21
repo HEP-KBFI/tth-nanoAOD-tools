@@ -9,6 +9,17 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 
 from tthAnalysis.NanoAODTools.tHweights_cfi import thIdxs
 
+REF_GENWEIGHT_LIMIT = 3
+
+def clip(value, min_val = -10., max_val = 10.):
+  return min(max(value, min_val), max_val)
+
+def clip_genWeight(genWeight, ref_genWeight):
+    assert(ref_genWeight > 0.)
+    max_val = REF_GENWEIGHT_LIMIT * ref_genWeight
+    min_val = -max_val
+    return clip(genWeight, min_val = min_val, max_val = max_val)
+
 class countHistogramProducer(Module):
 
   def __init__(self, refGenWeight, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
@@ -52,7 +63,6 @@ class countHistogramProducer(Module):
     self.LHENjetsBranchName      = "LHE_Njets"
     self.LHEHTBranchName         = "LHE_HT"
     self.ref_genWeight           = abs(float(refGenWeight))
-    self.ref_genWeight_limit     = 3
 
     if self.compHTXS and (self.splitByLHENjet or self.splitByLHEHT):
       raise ValueError("Cannot enable HTXS binning and LHE binning simultanteously")
@@ -287,18 +297,9 @@ class countHistogramProducer(Module):
         histogramParams['bins'], histogramParams['min'], histogramParams['max']
       )
 
-  def clip(self, value, min_val = -10., max_val = 10.):
-    return min(max(value, min_val), max_val)
-
   def clip_lhe(self, value, min_val = -10., max_val = 10.):
     correctiveFactor = 2. if self.nLHEScaleWeight == 8 else 1.
-    return self.clip(value * correctiveFactor, min_val, max_val)
-
-  def clip_genWeight(self, genWeight):
-    assert(self.ref_genWeight > 0.)
-    max_val = self.ref_genWeight_limit * self.ref_genWeight
-    min_val = -max_val
-    return self.clip(genWeight, min_val = min_val, max_val = max_val)
+    return clip(value * correctiveFactor, min_val, max_val)
 
   def isInitialized(self, histogramNames):
     return all(map(
@@ -457,7 +458,7 @@ class countHistogramProducer(Module):
 
       if hasattr(event, self.genWeightName):
         for fullGenWeight in self.useFullGenWeight:
-          genWeight_full = self.clip_genWeight(getattr(event, self.genWeightName))
+          genWeight_full = clip_genWeight(getattr(event, self.genWeightName), self.ref_genWeight)
           genWeight_sign = np.sign(genWeight_full)
           genWeight = genWeight_full if fullGenWeight else genWeight_sign
 
@@ -632,7 +633,7 @@ class countHistogramProducer(Module):
                       self.initHistograms(['CountWeightedPSWeight{}'.format(insert_name)], self.nPSweight)
                     for psweight_idx, psweight in enumerate(PSweights_ext):
                       self.histograms['CountWeightedPSWeight{}'.format(insert_name)]['histogram'].Fill(
-                        float(psweight_idx), genWeight * puWeight * lheTHXWeight * self.clip(psweight) * topSF
+                        float(psweight_idx), genWeight * puWeight * lheTHXWeight * clip(psweight) * topSF
                       )
                   if has_l1Prefire:
                     if 'histogram' in self.histograms['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)]:
@@ -640,7 +641,7 @@ class countHistogramProducer(Module):
                         self.initHistograms(['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)], self.nPSweight)
                       for psweight_idx, psweight in enumerate(PSweights_ext):
                         self.histograms['CountWeightedPSWeightL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                          float(psweight_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(psweight) * topSF
+                          float(psweight_idx), genWeight * puWeight * lheTHXWeight * l1_nom * clip(psweight) * topSF
                         )
 
                   if hasattr(event, self.nominalLHEweightName):
@@ -650,7 +651,7 @@ class countHistogramProducer(Module):
                         self.initHistograms(['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)], self.nPSweight)
                       for psweight_idx, psweight in enumerate(PSweights_ext):
                         self.histograms['CountWeightedPSWeightOriginalXWGTUP{}'.format(insert_name)]['histogram'].Fill(
-                          float(psweight_idx), genWeight * puWeight * lheTHXWeight * self.clip(psweight * lhe_nom) * topSF
+                          float(psweight_idx), genWeight * puWeight * lheTHXWeight * clip(psweight * lhe_nom) * topSF
                         )
                     if has_l1Prefire:
                       if 'histogram' in self.histograms['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)]:
@@ -658,7 +659,7 @@ class countHistogramProducer(Module):
                           self.initHistograms(['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)], self.nPSweight)
                         for psweight_idx, psweight in enumerate(PSweights_ext):
                           self.histograms['CountWeightedPSWeightOriginalXWGTUPL1PrefireNom{}'.format(insert_name)]['histogram'].Fill(
-                            float(psweight_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip(psweight * lhe_nom) * topSF
+                            float(psweight_idx), genWeight * puWeight * lheTHXWeight * l1_nom * clip(psweight * lhe_nom) * topSF
                           )
                   else:
                     if not self.isPrinted[self.nominalLHEweightName]:

@@ -7,9 +7,11 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collect
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 from PhysicsTools.NanoAODTools.postprocessing.tools import deltaR
 
+from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer import clip_genWeight
+
 class btagSFRatioFinder(Module):
 
-    def __init__(self, era, outputFn, histName):
+    def __init__(self, era, outputFn, histName, ref_genWeight):
         self.jetBranchName = "Jet"
         self.muonBranchName = "Muon"
         self.electronBranchName = "Electron"
@@ -30,6 +32,8 @@ class btagSFRatioFinder(Module):
         self.njets = 16
         self.njets_array = array.array('f', list(range(self.njets)))
         self.jetIdCut = 1 if self.era == 2016 else 2
+        self.ref_genWeight = abs(float(ref_genWeight))
+        assert(self.ref_genWeight > 0.)
 
         btagLooseCuts  = { 2016 : 0.0614, 2017 : 0.0521, 2018 : 0.0494 }
         btagMediumCuts = { 2016 : 0.3093, 2017 : 0.3033, 2018 : 0.2770 }
@@ -89,7 +93,7 @@ class btagSFRatioFinder(Module):
                 self.branchMap[sys_key] = { 'pt' : 'nom', 'btag' : '' }
 
         self.useFakeable = True
-        self.useGenWeightSignOnly = True
+        self.useGenWeightSignOnly = False
 
     def beginJob(self):
         pass
@@ -219,7 +223,7 @@ class btagSFRatioFinder(Module):
         muons = Collection(event, self.muonBranchName)
         eles = Collection(event, self.electronBranchName)
 
-        genWeight = getattr(event, self.genWeightBranchName)
+        genWeight = clip_genWeight(getattr(event, self.genWeightBranchName), self.ref_genWeight)
         genWeight_sign = 1. if genWeight > 0. else -1.
 
         muons_loose = [ mu for mu in muons if self.preselect_mu(mu) ]
@@ -271,6 +275,6 @@ class btagSFRatioFinder(Module):
         return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-btagSFRatio2016 = lambda outputFn, histName: btagSFRatioFinder(2016, outputFn, histName)
-btagSFRatio2017 = lambda outputFn, histName: btagSFRatioFinder(2017, outputFn, histName)
-btagSFRatio2018 = lambda outputFn, histName: btagSFRatioFinder(2018, outputFn, histName)
+btagSFRatio2016 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2016, outputFn, histName, ref_genWeight)
+btagSFRatio2017 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2017, outputFn, histName, ref_genWeight)
+btagSFRatio2018 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2018, outputFn, histName, ref_genWeight)
