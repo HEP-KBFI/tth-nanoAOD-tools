@@ -178,7 +178,7 @@ class countHistogramProducer(Module):
                 assert(False)
               suffix_title += " (%s)" % aux_bin_name
 
-              insert_name_empty_key = 'Count{}'.format(prefix, insert_name)
+              insert_name_empty_key = 'Count{}'.format(insert_name)
               if insert_name_empty and insert_name_empty_key not in self.histograms:
                 self.histograms.update([
                   (insert_name_empty_key, {
