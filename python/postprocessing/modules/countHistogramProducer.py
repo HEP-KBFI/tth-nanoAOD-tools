@@ -22,7 +22,7 @@ def clip_genWeight(genWeight, ref_genWeight):
 
 class countHistogramProducer(Module):
 
-  def __init__(self, refGenWeight, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
+  def __init__(self, refGenWeight, process_name, outputFileName, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -63,6 +63,9 @@ class countHistogramProducer(Module):
     self.LHENjetsBranchName      = "LHE_Njets"
     self.LHEHTBranchName         = "LHE_HT"
     self.ref_genWeight           = abs(float(refGenWeight))
+    self.process_name            = process_name
+    self.outputFileName          = outputFileName
+    self.out                     = None
 
     if self.compHTXS and (self.splitByLHENjet or self.splitByLHEHT):
       raise ValueError("Cannot enable HTXS binning and LHE binning simultanteously")
@@ -364,27 +367,41 @@ class countHistogramProducer(Module):
     pass
 
   def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-    self.out = wrappedOutputTree
-    if self.compTopRwgt:
-      for choice in self.topPtRwgtChoices:
-        self.out.branch("{}_{}".format(self.topRwgtBranchName, choice), "F")
+    if wrappedOutputTree:
+      self.out = wrappedOutputTree
+      if self.compTopRwgt:
+        for choice in self.topPtRwgtChoices:
+          self.out.branch("{}_{}".format(self.topRwgtBranchName, choice), "F")
     inputTreeBranchNames = [ branch.GetName() for branch in inputTree.GetListOfBranches() ]
     if self.LHEScaleWeightName in inputTreeBranchNames:
       self.compLHEEnvelope = True
     if self.compLHEEnvelope:
       print("Computing LHE envelope weights")
-      self.out.branch(self.LHEEnvelopeNameUp,   "F")
-      self.out.branch(self.LHEEnvelopeNameDown, "F")
+      if self.out:
+        self.out.branch(self.LHEEnvelopeNameUp,   "F")
+        self.out.branch(self.LHEEnvelopeNameDown, "F")
     else:
       print("NOT computing LHE envelope weights")
 
   def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
-    outputFile.cd()
+    out_file = None
+
+    if outputFile:
+      outputFile.cd()
+    else:
+      assert(self.outputFileName)
+      assert(self.process_name)
+      out_file = ROOT.TFile.Open(self.outputFileName, 'recreate')
+      out_dir = out_file.mkdir(self.process_name)
+      out_dir.cd()
 
     for histogramName in self.histograms:
       if 'histogram' in self.histograms[histogramName] and \
          self.histograms[histogramName]['histogram'] != None:
         self.histograms[histogramName]['histogram'].Write()
+
+    if out_file:
+      out_file.Close()
 
   def analyze(self, event):
     if 'histogram' in self.histograms['Count']:
@@ -681,19 +698,26 @@ class countHistogramProducer(Module):
           self.isPrinted[self.genWeightName] = True
           print('Missing branch: %s' % self.genWeightName)
 
-    if self.compTopRwgt:
-      for topPtRwgtIdx, choice in enumerate(self.topPtRwgtChoices):
-        self.out.fillBranch("{}_{}".format(self.topRwgtBranchName, choice), topRwgt[topPtRwgtIdx])
-    if self.compLHEEnvelope:
-      self.out.fillBranch(self.LHEEnvelopeNameUp, LHEEnvelopeValues[0])
-      self.out.fillBranch(self.LHEEnvelopeNameDown, LHEEnvelopeValues[1])
+    if self.out:
+      if self.compTopRwgt:
+        for topPtRwgtIdx, choice in enumerate(self.topPtRwgtChoices):
+          self.out.fillBranch("{}_{}".format(self.topRwgtBranchName, choice), topRwgt[topPtRwgtIdx])
+      if self.compLHEEnvelope:
+        self.out.fillBranch(self.LHEEnvelopeNameUp, LHEEnvelopeValues[0])
+        self.out.fillBranch(self.LHEEnvelopeNameDown, LHEEnvelopeValues[1])
 
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-countHistogramAll                 = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllCompTopRwgt      = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllCompHTXS         = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
-countHistogramAllSplitByLHENjet   = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
-countHistogramAllSplitByLHEHT     = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
-countHistogramAllSplitByLHENjetHT = lambda refGenWeight: countHistogramProducer(refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
+def countHistogramAll(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllCompTopRwgt(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllCompHTXS(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllSplitByLHENjet(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
+def countHistogramAllSplitByLHEHT(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
+def countHistogramAllSplitByLHENjetHT(refGenWeight, process_name, output_file):
+  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
