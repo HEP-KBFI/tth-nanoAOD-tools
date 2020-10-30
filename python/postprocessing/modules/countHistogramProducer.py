@@ -22,7 +22,7 @@ def clip_genWeight(genWeight, ref_genWeight):
 
 class countHistogramProducer(Module):
 
-  def __init__(self, refGenWeight, process_name, outputFileName, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
+  def __init__(self, outputFileName, process_name, refGenWeight, compTopRwgt, compHTXS, splitByLHENjet, splitByLHEHT):
     self.puWeightName            = 'puWeight'
     self.puWeightName_up         = '%sUp' % self.puWeightName
     self.puWeightName_down       = '%sDown' % self.puWeightName
@@ -709,15 +709,15 @@ class countHistogramProducer(Module):
     return True
 
 # provide this variable as the 2nd argument to the import option for the nano_postproc.py script
-def countHistogramAll(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-def countHistogramAllCompTopRwgt(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
-def countHistogramAllCompHTXS(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
-def countHistogramAllSplitByLHENjet(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
-def countHistogramAllSplitByLHEHT(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
-def countHistogramAllSplitByLHENjetHT(refGenWeight, process_name, output_file):
-  return countHistogramProducer(refGenWeight, process_name, output_file, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
+def countHistogramAll(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllCompTopRwgt(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = True,  compHTXS = False, splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllCompHTXS(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = False, compHTXS = True,  splitByLHENjet = False, splitByLHEHT = False)
+def countHistogramAllSplitByLHENjet(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = False)
+def countHistogramAllSplitByLHEHT(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = False, splitByLHEHT = True)
+def countHistogramAllSplitByLHENjetHT(output_file, process_name, refGenWeight):
+  return countHistogramProducer(output_file, process_name, refGenWeight, compTopRwgt = False, compHTXS = False, splitByLHENjet = True,  splitByLHEHT = True)
