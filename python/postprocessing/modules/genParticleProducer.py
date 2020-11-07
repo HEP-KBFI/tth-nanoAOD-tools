@@ -252,9 +252,10 @@ def genTopSelection(genParticles, choice, enable_consistency_checks = True):
     genQsfromTop = [ genParticles[idx] for idx in genTopCandidateDaughterIdxs if sign(genTopCandidate.pdgId) * genParticles[idx].pdgId in [1, 3, 5] ]
 
     if len(genWsfromTop) != 1:
-      raise ValueError("Not exactly 1 W boson found from top (%s) decay: %s" % \
+      print("Not exactly 1 W boson found from top (%s) decay: %s" % \
         (genTopCandidate, ', '.join(map(lambda idx: str(genParticles[idx]), genTopCandidateDaughterIdxs)))
       )
+      continue
     if len(genQsfromTop) != 1:
       raise ValueError("Not exactly 1 quark found from top (%s) decay: %s" % \
         (genTopCandidate, ', '.join(map(lambda idx: str(genParticles[idx]), genTopCandidateDaughterIdxs)))
