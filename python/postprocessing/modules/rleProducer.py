@@ -39,7 +39,7 @@ class rleProducer(Module):
         if evt_nr > self.max_event:
             print("WARNING: event {} at idx {} exceeds {}".format(evt_nr, self.current_event_idx, self.max_event))
 
-        ls_nr = self.current_event_idx % self.max_event
+        ls_nr = int(self.current_event_idx / self.max_event)
         self.out.fillBranch(self.run_brName, self.run_nr)
         self.out.fillBranch(self.ls_brName, ls_nr)
         self.current_event_idx += 1
