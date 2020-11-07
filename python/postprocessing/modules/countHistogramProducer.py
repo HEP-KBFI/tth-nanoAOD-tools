@@ -295,7 +295,8 @@ class countHistogramProducer(Module):
       if nofBins >= 0 and histogramParams['bins'] != nofBins:
         histogramParams['bins'] = nofBins
         histogramParams['max'] = nofBins - 0.5
-      histogramParams['histogram'] = ROOT.TH1F(
+      histogram_type = ROOT.TH1I if histogramName == 'Count' or histogramName.startswith('Count_') else ROOT.TH1F
+      histogramParams['histogram'] = histogram_type(
         histogramName, histogramParams['title'],
         histogramParams['bins'], histogramParams['min'], histogramParams['max']
       )
