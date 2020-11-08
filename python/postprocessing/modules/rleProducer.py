@@ -23,6 +23,7 @@ class rleProducer(Module):
         self.out = wrappedOutputTree
         self.out.branch(self.run_brName, "i")
         self.out.branch(self.ls_brName, "i")
+        self.out.branch(self.evt_brName, "l")
 
         inputFile_baseName = os.path.basename(inputFile.GetName())
         inputFile_rgxMatch = self.inputFile_rgx.match(inputFile_baseName)
@@ -35,13 +36,11 @@ class rleProducer(Module):
         pass
 
     def analyze(self, event):
-        evt_nr = getattr(event, self.evt_brName)
-        if evt_nr > self.max_event:
-            print("WARNING: event {} at idx {} exceeds {}".format(evt_nr, self.current_event_idx, self.max_event))
-
         ls_nr = int(self.current_event_idx / self.max_event)
+        evt_nr = self.current_event_idx % self.max_event
         self.out.fillBranch(self.run_brName, self.run_nr)
         self.out.fillBranch(self.ls_brName, ls_nr)
+        self.out.fillBranch(self.evt_brName, evt_nr)
         self.current_event_idx += 1
 
         return True

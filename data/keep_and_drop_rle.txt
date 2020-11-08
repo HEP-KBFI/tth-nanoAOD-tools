@@ -1,3 +1,4 @@
 keep *
 drop run
 drop luminosityBlock
+drop event
