@@ -135,6 +135,8 @@ class countHistogramProducer(Module):
           self.htxs.update(htxs_qqH)
           self.htxs.update(htxs_wh)
           self.htxs.update(htxs_zh)
+        else:
+          assert(False)
 
     if self.compTopRwgt:
       print("Computing top reweighting: %s" % self.compTopRwgt)
