@@ -14,6 +14,7 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.trigObjMatcherProducer impo
 from tthAnalysis.NanoAODTools.postprocessing.modules.puHistogramProducer import puHist2016, puHist2017, puHist2018
 from tthAnalysis.NanoAODTools.postprocessing.modules.egammaIdProducer import egammaId
 from tthAnalysis.NanoAODTools.postprocessing.modules.skim import skimmer
+from tthAnalysis.NanoAODTools.postprocessing.modules.htxs import htxs
 from PhysicsTools.NanoAODTools.postprocessing.modules.common.puWeightProducer import puWeight2016, puWeight2017, puWeight2018
 from PhysicsTools.NanoAODTools.postprocessing.modules.jme.jetmetHelperRun2 import createJMECorrector
 
