@@ -35,7 +35,7 @@ class htxsProducer(Module):
     ls = getattr(event, self.lsBr)
     evt  = getattr(event, self.evtBr)
     rle = '{}:{}:{}'.format(run, ls, evt)
-    out = subprocess.check_output([ 'grep', rle, self.rleFile ])
+    out = subprocess.check_output([ 'grep', '{} '.format(rle), self.rleFile ])
     out_split = out.strip().split()
     if len(out_split) != 2:
       raise RuntimeError("Not exactly two cols: %s" % out)
