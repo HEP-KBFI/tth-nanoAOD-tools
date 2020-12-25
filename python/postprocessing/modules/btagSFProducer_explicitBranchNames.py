@@ -4,7 +4,7 @@ from PhysicsTools.NanoAODTools.postprocessing.modules.btv.btagSFProducer import 
 
 class btagSFProducer_explicitBranchNames(btagSFProducer):
   def __init__(self, era, algo, jetName = 'Jet', verbose = 0):
-    btagSFProducer.__init__(self, era, algo, None, verbose, jetName)
+    btagSFProducer.__init__(self, era = era, algo = algo, sfFileName = None, verbose = verbose, jetCollectionName = jetName)
 
     self.branchName_prefix       = "%s_btagSF_%s" % (self.jetCollectionName, self.algo)
     self.branchName_shape_prefix = '%s_shape'      % self.branchName_prefix
