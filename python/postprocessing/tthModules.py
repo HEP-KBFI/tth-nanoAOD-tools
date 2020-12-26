@@ -38,3 +38,7 @@ jetmetAK4LSLooseUncertainties2018Total = createJMECorrector(dataYear = 2018, jes
 fatjetAK8LSLooseUncertainties2016Total = createJMECorrector(dataYear = 2016, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi", splitJER = False)
 fatjetAK8LSLooseUncertainties2017Total = createJMECorrector(dataYear = 2017, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi", splitJER = False)
 fatjetAK8LSLooseUncertainties2018Total = createJMECorrector(dataYear = 2018, jesUncert = "Total", jetType = "AK8LSLoosePFPuppi", applyHEMfix = True, splitJER = False)
+
+fatjetAK8LSLooseUncertainties2016Merged = createJMECorrector(dataYear = 2016, jesUncert = "Merged", jetType = "AK8LSLoosePFPuppi", splitJER = False)
+fatjetAK8LSLooseUncertainties2017Merged = createJMECorrector(dataYear = 2017, jesUncert = "Merged", jetType = "AK8LSLoosePFPuppi", splitJER = False)
+fatjetAK8LSLooseUncertainties2018Merged = createJMECorrector(dataYear = 2018, jesUncert = "Merged", jetType = "AK8LSLoosePFPuppi", applyHEMfix = True, splitJER = False)
