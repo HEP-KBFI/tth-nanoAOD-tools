@@ -76,7 +76,8 @@ class btagSFRatioFinder(Module):
                 jes_key = '{}{}'.format(jes, shift)
                 jes_pt = jes_key.replace('JES', 'jes')
                 assert(jes_key not in self.branchMap)
-                self.branchMap[jes_key] = { 'pt' : jes_pt, 'btag' : '' }
+                btag_name = '{}_{}'.format(shift.lower(), jes.replace('JES', 'jes'))
+                self.branchMap[jes_key] = { 'pt' : jes_pt, 'btag' : btag_name }
 
         jer_list = [ 'JERBarrel', 'JEREndcap1' ]
         self.jer_keys = []
