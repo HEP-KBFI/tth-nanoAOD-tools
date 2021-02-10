@@ -37,11 +37,13 @@ class btagSFRatioFinder(Module):
 
         btagLooseCuts  = { 2016 : 0.0614, 2017 : 0.0521, 2018 : 0.0494 }
         btagMediumCuts = { 2016 : 0.3093, 2017 : 0.3033, 2018 : 0.2770 }
+        btagTightCuts = { 2016 : 0.7221, 2017 : 0.7489, 2018 : 0.7264 }
         self.btagLooseCut = btagLooseCuts[self.era]
         self.btagMediumCut = btagMediumCuts[self.era]
+        self.btagTightCut = btagTightCuts[self.era]
 
-        self.mu_wp = 0.85
-        self.ele_wp = 0.80
+        self.mu_wp = 0.50
+        self.ele_wp = 0.30
 
         self.btagSF_branch = 'btagSF_deepjet_shape'
         self.branchMap = collections.OrderedDict([
@@ -148,7 +150,7 @@ class btagSFRatioFinder(Module):
                muon.assocJetBtag_DeepJet <= self.btagMediumCut and \
                (
                    True if muon.mvaTTH > self.mu_wp else (
-                       muon.jetPtRatio >= 2. / 3 and
+                       muon.jetPtRatio >= 1. / 1.8 and
                        muon.assocJetBtag_DeepJet <= self.btag_cut(muon)
                    )
                )
@@ -162,12 +164,12 @@ class btagSFRatioFinder(Module):
                self.cone_pt(ele, self.ele_wp) >= 10. and \
                ele.lostHits == 0 and \
                ele.convVeto and \
-               ele.assocJetBtag_DeepJet <= self.btagMediumCut and \
                self.hlt_cut(ele) and \
                (
-                   True if ele.mvaTTH > self.ele_wp else (
+                   ele.assocJetBtag_DeepJet <= self.btagMediumCut if ele.mvaTTH > self.ele_wp else (
+                           ele.assocJetBtag_DeepJet <= self.btagTightCut and
                            ele.jetPtRatio >= 1. / 1.7 and
-                           ele.mvaFall17V2noIso_WP80
+                           ele.mvaFall17V2noIso_WP90
                    )
                )
 
