@@ -640,6 +640,7 @@ genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFro
 
 genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
+    genPhotonAllEntry,
     genPromptPhotonEntry,
     genHiggsEntry,
     genHiggsDaughtersEntry,
