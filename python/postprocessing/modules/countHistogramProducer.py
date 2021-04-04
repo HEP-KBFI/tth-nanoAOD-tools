@@ -301,9 +301,10 @@ class countHistogramProducer(Module):
         histogramParams['bins'], histogramParams['min'], histogramParams['max']
       )
 
-  def clip_lhe(self, value, min_val = -10., max_val = 10.):
+  def clip_lhe(self, value, nominal = 1., min_val = -10., max_val = 10.):
+    denom = nominal if nominal != 0. else 1.
     correctiveFactor = 2. if self.nLHEScaleWeight == 8 else 1.
-    return clip(value * correctiveFactor, min_val, max_val)
+    return clip(value * correctiveFactor / denom, min_val, max_val)
 
   def isInitialized(self, histogramNames):
     return all(map(
@@ -354,11 +355,14 @@ class countHistogramProducer(Module):
     genTop_neg_pt = genTops[genTop_neg_idx].pt
     return np.sqrt(self.compTopRwgtSF(genTop_pos_pt, choice) * self.compTopRwgtSF(genTop_neg_pt, choice))
 
+  def getLHENominal(self, LHEScaleWeight):
+    return LHEScaleWeight[4] if len(LHEScaleWeight) == 9 else 1.
+
   def getLHEEnvelope(self, LHEScaleWeight):
     nof_lheScaleWeights = len(LHEScaleWeight)
     if nof_lheScaleWeights not in self.LHEEnvelopeIdxs:
       return (1., 1.)
-    LHEEnvelopeValues = [ self.clip_lhe(LHEScaleWeight[lhe_idx]) for lhe_idx in self.LHEEnvelopeIdxs[nof_lheScaleWeights] ]
+    LHEEnvelopeValues = [ LHEScaleWeight[lhe_idx] for lhe_idx in self.LHEEnvelopeIdxs[nof_lheScaleWeights] ]
     return [ max(LHEEnvelopeValues), min(LHEEnvelopeValues) ]
 
   def beginJob(self):
@@ -554,6 +558,7 @@ class countHistogramProducer(Module):
                   assert(self.compLHEEnvelope)
                   LHEScaleWeight = getattr(event, self.LHEScaleWeightName)
                   LHEEnvelopeValues = self.getLHEEnvelope(LHEScaleWeight)
+                  LHENominal = self.getLHENominal(LHEScaleWeight)
 
                   nof_lheScaleWeight = len(LHEScaleWeight)
                   if nof_lheScaleWeight != self.nLHEScaleWeight:
@@ -568,7 +573,7 @@ class countHistogramProducer(Module):
                       self.initHistograms(['{}LHEWeightScale{}'.format(prefix, insert_name)], self.nLHEScaleWeight)
                     for lhe_scale_idx in range(self.nLHEScaleWeight):
                       self.histograms['{}LHEWeightScale{}'.format(prefix, insert_name)]['histogram'].Fill(
-                        float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
+                        float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * self.clip_lhe(LHEScaleWeight[lhe_scale_idx], LHENominal) * topSF
                       )
 
                   if has_l1Prefire:
@@ -577,7 +582,7 @@ class countHistogramProducer(Module):
                         self.initHistograms(['{}LHEWeightScaleL1PrefireNom{}'.format(prefix, insert_name)], self.nLHEScaleWeight)
                       for lhe_scale_idx in range(self.nLHEScaleWeight):
                         self.histograms['{}LHEWeightScaleL1PrefireNom{}'.format(prefix, insert_name)]['histogram'].Fill(
-                          float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx]) * topSF
+                          float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(LHEScaleWeight[lhe_scale_idx], LHENominal) * topSF
                         )
 
                   if 'histogram' in self.histograms['{}LHEEnvelope{}'.format(prefix, insert_name)]:
@@ -585,7 +590,7 @@ class countHistogramProducer(Module):
                       self.initHistograms(['{}LHEEnvelope{}'.format(prefix, insert_name)], self.nLHEEnvelope)
                     for lhe_scale_idx, lhe_scale_value in enumerate(LHEEnvelopeValues):
                       self.histograms['{}LHEEnvelope{}'.format(prefix, insert_name)]['histogram'].Fill(
-                        float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * lhe_scale_value * topSF
+                        float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * self.clip_lhe(lhe_scale_value, LHENominal) * topSF
                       )
                   if has_l1Prefire:
                     if 'histogram' in self.histograms['{}LHEEnvelopeL1PrefireNom{}'.format(prefix, insert_name)]:
@@ -593,7 +598,7 @@ class countHistogramProducer(Module):
                         self.initHistograms(['{}LHEEnvelopeL1PrefireNom{}'.format(prefix, insert_name)], self.nLHEEnvelope)
                       for lhe_scale_idx, lhe_scale_value in enumerate(LHEEnvelopeValues):
                         self.histograms['{}LHEEnvelopeL1PrefireNom{}'.format(prefix, insert_name)]['histogram'].Fill(
-                          float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * lhe_scale_value * topSF
+                          float(lhe_scale_idx), genWeight * puWeight * lheTHXWeight * l1_nom * self.clip_lhe(lhe_scale_value, LHENominal) * topSF
                         )
 
                 else:
@@ -704,8 +709,9 @@ class countHistogramProducer(Module):
         for topPtRwgtIdx, choice in enumerate(self.topPtRwgtChoices):
           self.out.fillBranch("{}_{}".format(self.topRwgtBranchName, choice), topRwgt[topPtRwgtIdx])
       if self.compLHEEnvelope:
-        self.out.fillBranch(self.LHEEnvelopeNameUp, LHEEnvelopeValues[0])
-        self.out.fillBranch(self.LHEEnvelopeNameDown, LHEEnvelopeValues[1])
+        #TODO in future iterations do not clip or apply the corrective factors, do it all at the analysis level instead
+        self.out.fillBranch(self.LHEEnvelopeNameUp, self.clip_lhe(LHEEnvelopeValues[0]))
+        self.out.fillBranch(self.LHEEnvelopeNameDown, self.clip_lhe(LHEEnvelopeValues[1]))
 
     return True
 
