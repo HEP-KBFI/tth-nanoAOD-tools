@@ -162,10 +162,7 @@ def genPhotonSelection(genParticles):
   return filter(lambda genPart: genPart.pdgId == 22, genParticles)
 
 def genPromptPhotonSelection(genParticles):
-  return filter(
-    lambda genPart: genPart.status == 1 and genPart.checkIf('isPrompt'),
-    genPhotonSelection(genParticles)
-  )
+  return filter(lambda genPart: genPart.checkIf('isPrompt'), genPhotonSelection(genParticles))
 
 def genHiggsSelection(genParticles):
   return filter(
@@ -640,7 +637,6 @@ genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFro
 
 genAll = lambda : genParticleProducer(dict([
     genLeptonEntry,
-    genPhotonAllEntry,
     genPromptPhotonEntry,
     genHiggsEntry,
     genHiggsDaughtersEntry,
