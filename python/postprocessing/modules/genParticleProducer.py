@@ -158,6 +158,14 @@ def genPromptLeptonSelection(genParticles):
     genLeptonSelection(genParticles)
   )
 
+def genIsHardProcessSelection(genParticles):
+  return filter(
+    lambda genPart:
+      (genPart.statusFlags & 128) and \
+      (abs(genPart.pdgId) in [ 11, 13, 15, 21 ] or abs(genPart.pdgId) < 6),
+    genParticles
+  )
+
 def genPhotonSelection(genParticles):
   return filter(lambda genPart: genPart.pdgId == 22, genParticles)
 
@@ -578,6 +586,7 @@ class genParticleProducer(Module):
     return True
 
 
+genIsHardProcessEntry               = ("GenIsHardProcess",               genIsHardProcessSelection)
 genLeptonEntry                      = ("GenLep",                         genPromptLeptonSelection)
 genLeptonAllEntry                   = ("GenLepAll",                      genLeptonSelection)
 genPromptPhotonEntry                = ("GenPhoton",                      genPromptPhotonSelection)
@@ -607,6 +616,7 @@ genQuarkFromTopEntry                = ("GenQuarkFromTop",                (lambda
 genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_BQUARK_FROM_TOP)))
 
 # provide these variables as the 2nd arguments to the import option for the nano_postproc.py script
+genIsHardProcess               = lambda : genParticleProducer(dict([genIsHardProcessEntry]))               # isHardProcess electrons, muons, tau leptons, quarks (except for tops) and gluons
 genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all prompt stable leptons
 genLeptonAll                   = lambda : genParticleProducer(dict([genLeptonAllEntry]))                   # all stable leptons
 genPromptPhoton                = lambda : genParticleProducer(dict([genPromptPhotonEntry]))                # stable prompt photons
@@ -636,6 +646,7 @@ genQuarkFromTop                = lambda : genParticleProducer(dict([genQuarkFrom
 genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFromTopEntry]))               # only b-quarks (b) from t -> W b
 
 genAll = lambda : genParticleProducer(dict([
+    genIsHardProcessEntry,
     genLeptonEntry,
     genPromptPhotonEntry,
     genHiggsEntry,
