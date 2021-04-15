@@ -7,6 +7,7 @@ from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
 import math
 import logging
 import sys
+import itertools
 
 
 sign = lambda x: int(math.copysign(1, x) if x != 0 else 0)
@@ -92,6 +93,24 @@ class MassTable:
     return sign(genParticleInstance.Charge())
 
 
+class GenPart(object):
+  def __init__(self, p4, pdgId, charge, status, statusFlags):
+    self.pt               = p4.Pt()
+    self.eta              = p4.Eta()
+    self.phi              = p4.Phi()
+    self.mass             = p4.M()
+    self.pdgId            = pdgId
+    self.charge           = charge
+    self.status           = status
+    self.statusFlags      = statusFlags
+
+  def __str__(self):
+    return "pt = %.3f eta = %.3f phi = %.3f mass = %.3f pdgId = %i charge = %i status = %i statusFlags = %i" % \
+           (self.pt, self.eta, self.phi, self.mass, self.pdgId, self.charge, self.status, self.statusFlags)
+
+  def __repr__(self):
+    return self.__str__()
+
 class GenPartAux(object):
   def __init__(self, genPart, idx, massTable):
     self.pt               = genPart.pt
@@ -158,11 +177,106 @@ def genPromptLeptonSelection(genParticles):
     genLeptonSelection(genParticles)
   )
 
+def getP4(genParticle):
+  p4 = ROOT.TLorentzVector()
+  p4.SetPtEtaPhiM(genParticle.pt, genParticle.eta, genParticle.phi, genParticle.mass)
+  return p4
+
+def genPhotonCandidateSelection(genParticles):
+  # find all status = 1 prompt leptons
+  leptonPdgIds = [ 11, 13, 15 ]
+  genPromptFinalStateParticles = { sign * pdgId : [] for pdgId in leptonPdgIds for sign in [ +1, -1 ] }
+  for genPart in genParticles:
+    if genPart.checkIf('isPrompt') and genPart.status == 1 and abs(genPart.pdgId) in leptonPdgIds:
+      genPromptFinalStateParticles[genPart.pdgId].append(genPart.idx)
+
+  # form the SFOS pairs
+  sfosPairCandidates = []
+  for leptonFlavor in leptonPdgIds:
+    sfosPairCandidates.extend(list(itertools.product(
+      genPromptFinalStateParticles[leptonFlavor],
+      genPromptFinalStateParticles[-leptonFlavor]
+    )))
+
+  # for every lepton in each pair, find the parent that doesn't decay to a single particle
+  sfosPairs = []
+  for sfosPairCandidate in sfosPairCandidates:
+    sfosPair = []
+    for leptonIdx in sfosPairCandidate:
+      currentIdx = -1
+      leptonIdxs = [ leptonIdx ]
+      while leptonIdxs:
+        currentIdx = leptonIdxs.pop()
+        momIdx = genParticles[currentIdx].genPartIdxMother
+        assert(momIdx != currentIdx)
+        nof_momIdx_daugthers = len([ genPart for genPart in genParticles if genPart.genPartIdxMother == momIdx ])
+        if momIdx >= 0 and genParticles[momIdx].pdgId == genParticles[currentIdx].pdgId and nof_momIdx_daugthers == 1:
+          leptonIdxs.append(momIdx)
+      assert(currentIdx >= 0)
+      sfosPair.append(currentIdx)
+    assert(len(sfosPair) == 2)
+    sfosPairs.append(sfosPair)
+
+  # find out the SFOS leptons pairs that have a common mother that is coming from a lepton
+  sfosPairsWithCommonMom = {}
+  sfosPairsWithNoMoms = []
+  for sfosPair in sfosPairs:
+    moms = [ genParticles[leptonIdx].genPartIdxMother for leptonIdx in sfosPair ]
+    assert(len(moms) == 2)
+    if moms[0] == moms[1]:
+      momIdx = moms[0]
+      if momIdx < 0:
+        sfosPairsWithNoMoms.append(sfosPair)
+        continue
+      momPdgId = abs(genParticles[momIdx].pdgId)
+      if momPdgId not in leptonPdgIds:
+        continue
+      if momIdx not in sfosPairsWithCommonMom:
+        sfosPairsWithCommonMom[momIdx] = []
+      sfosPairsWithCommonMom[momIdx].append(sfosPair)
+
+  # for each mother, keep only the SFOS daughters that have the lowest energy
+  sfosFinalPairs = []
+  for momIdx in sfosPairsWithCommonMom:
+    nof_sfosPairs = len(sfosPairsWithCommonMom[momIdx])
+    if nof_sfosPairs > 1:
+      sfosPairWEnergy = []
+      for sfosPairIdx, sfosPair in enumerate(sfosPairsWithCommonMom[momIdx]):
+        firstParticle = genParticles[sfosPair[0]]
+        secondParticle = genParticles[sfosPair[1]]
+        pairEnergy = (getP4(firstParticle) + getP4(secondParticle)).E()
+        sfosPairWEnergy.append((sfosPairIdx, pairEnergy))
+
+      sfosPairWEnergy = list(sorted(sfosPairWEnergy, key = lambda entry: entry[1]))
+      assert(len(sfosPairWEnergy) > 1)
+      sfosFinalPairs.append(sfosPairsWithCommonMom[momIdx][sfosPairWEnergy[0][0]])
+
+    elif nof_sfosPairs == 1:
+      sfosFinalPairs.append(sfosPairsWithCommonMom[momIdx][0])
+    else:
+      assert(False)
+
+  # assume that parentless SFOS pairs come from different photons
+  sfosFinalPairs.extend(sfosPairsWithNoMoms)
+
+  # construct the proxy photons
+  proxyPhotons = []
+  for sfosPair in sfosFinalPairs:
+    firstParticle = genParticles[sfosPair[0]]
+    secondParticle = genParticles[sfosPair[1]]
+    finalParticle = getP4(firstParticle) + getP4(secondParticle)
+    proxyPhoton = GenPart(finalParticle, 21, 0, 201, 2**statusFlagsMap['isPrompt'])
+    #print("Considered\n  %s\n  %s\nas input to produce proxy photon:\n  %s" % (firstParticle, secondParticle, proxyPhoton)) # for debugging
+    proxyPhotons.append(proxyPhoton)
+
+  return proxyPhotons
+
 def genIsHardProcessSelection(genParticles):
   return filter(
     lambda genPart:
       (genPart.statusFlags & 128) and \
-      (abs(genPart.pdgId) in [ 11, 13, 15, 21 ] or abs(genPart.pdgId) < 6),
+      (abs(genPart.pdgId) in [ 11, 13, 15, 21 ] or abs(genPart.pdgId) < 6) and \
+      (genPart.status != 21 if (abs(genPart.pdgId) == 21 or abs(genPart.pdgId) < 6) else True),
     genParticles
   )
 
@@ -567,6 +681,7 @@ class genParticleProducer(Module):
 
   def analyze(self, event):
     genParticles  = map(lambda genPartIdx: GenPartAux(genPartIdx[1], genPartIdx[0], self.massTable), enumerate(Collection(event, "GenPart")))
+    #print(":".join(str(getattr(event, nr)) for nr in [ 'run', 'luminosityBlock', 'event' ])) # for debugging pruposes
 
     for branchBaseName in self.branchBaseNames:
       try:
@@ -586,6 +701,7 @@ class genParticleProducer(Module):
     return True
 
 
+genPhotonCandidateEntry             = ("GenPhotonCandidate",             genPhotonCandidateSelection)
 genIsHardProcessEntry               = ("GenIsHardProcess",               genIsHardProcessSelection)
 genLeptonEntry                      = ("GenLep",                         genPromptLeptonSelection)
 genLeptonAllEntry                   = ("GenLepAll",                      genLeptonSelection)
@@ -616,6 +732,7 @@ genQuarkFromTopEntry                = ("GenQuarkFromTop",                (lambda
 genBQuarkFromTopEntry               = ("GenBQuarkFromTop",               (lambda genParticles : genTopSelection(genParticles, SelectionOptions.SAVE_BQUARK_FROM_TOP)))
 
 # provide these variables as the 2nd arguments to the import option for the nano_postproc.py script
+genPhotonCandidate             = lambda : genParticleProducer(dict([genPhotonCandidateEntry]))             # proxy photons constructed from SFOS lepton pairs
 genIsHardProcess               = lambda : genParticleProducer(dict([genIsHardProcessEntry]))               # isHardProcess electrons, muons, tau leptons, quarks (except for tops) and gluons
 genLepton                      = lambda : genParticleProducer(dict([genLeptonEntry]))                      # all prompt stable leptons
 genLeptonAll                   = lambda : genParticleProducer(dict([genLeptonAllEntry]))                   # all stable leptons
@@ -646,6 +763,7 @@ genQuarkFromTop                = lambda : genParticleProducer(dict([genQuarkFrom
 genBQuarkFromTop               = lambda : genParticleProducer(dict([genBQuarkFromTopEntry]))               # only b-quarks (b) from t -> W b
 
 genAll = lambda : genParticleProducer(dict([
+    genPhotonCandidateEntry,
     genIsHardProcessEntry,
     genLeptonEntry,
     genPromptPhotonEntry,
