@@ -265,7 +265,7 @@ def genPhotonCandidateSelection(genParticles):
     firstParticle = genParticles[sfosPair[0]]
     secondParticle = genParticles[sfosPair[1]]
     finalParticle = getP4(firstParticle) + getP4(secondParticle)
-    proxyPhoton = GenPart(finalParticle, 21, 0, 201, 2**statusFlagsMap['isPrompt'])
+    proxyPhoton = GenPart(finalParticle, 22, 0, 201, 2**statusFlagsMap['isPrompt'])
     #print("Considered\n  %s\n  %s\nas input to produce proxy photon:\n  %s" % (firstParticle, secondParticle, proxyPhoton)) # for debugging
     proxyPhotons.append(proxyPhoton)
 
