@@ -49,7 +49,7 @@ class SubJetBtagCounter(Module):
         pass
 
     def getHistKey(self, binning, flavor, btagWP = 'total'):
-        return '{}_{}_{}'.format(binning, flavor, btagWP)
+        return '{}_{}_{}_{}'.format(binning, flavor, btagWP, self.histName)
 
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         for binning in self.binning:
@@ -73,6 +73,7 @@ class SubJetBtagCounter(Module):
                         self.hists[histKey].SetOption('col text')
                     else:
                         self.hists[histKey].SetOption('col')
+                    self.hists[histKey].SetStats(0)
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = ROOT.TFile.Open(self.outputFileName, 'recreate')
