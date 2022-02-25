@@ -71,6 +71,8 @@ class SubJetBtagCounter(Module):
                     self.hists[histKey].Sumw2()
                     if binning != 'fine':
                         self.hists[histKey].SetOption('col text')
+                    else:
+                        self.hists[histKey].SetOption('col')
 
     def endFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         self.out = ROOT.TFile.Open(self.outputFileName, 'recreate')
