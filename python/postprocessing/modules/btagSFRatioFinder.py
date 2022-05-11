@@ -11,10 +11,11 @@ from tthAnalysis.NanoAODTools.postprocessing.modules.countHistogramProducer impo
 
 class btagSFRatioFinder(Module):
 
-    def __init__(self, era, outputFn, histName, ref_genWeight):
+    def __init__(self, era, outputFn, histName, ref_genWeight, applySLcuts = False):
         self.jetBranchName = "Jet"
         self.muonBranchName = "Muon"
         self.electronBranchName = "Electron"
+        self.tauBranchName = "Tau"
         self.genWeightBranchName = "genWeight"
         self.puWeightBranchName = "puWeight"
         self.puWeightBranchNameUp = "puWeightUp"
@@ -98,6 +99,22 @@ class btagSFRatioFinder(Module):
         self.useFakeable = True
         self.useGenWeightSignOnly = False
 
+        self.applySLcuts = applySLcuts
+        self.triggerList_ele = {
+            2016 : [ 'HLT_Ele25_eta2p1_WPTight_Gsf', 'HLT_Ele27_WPTight_Gsf', 'HLT_Ele27_eta2p1_WPLoose_Gsf' ],
+            2017 : [ 'HLT_Ele32_WPTight_Gsf', 'HLT_Ele35_WPTight_Gsf' ],
+            2018 : [ 'HLT_Ele32_WPTight_Gsf' ],
+        }
+        self.triggerList_mu = {
+            2016 : [ 'HLT_IsoMu22_eta2p1', 'HLT_IsoMu22', 'HLT_IsoMu24', 'HLT_IsoTkMu22_eta2p1', 'HLT_IsoTkMu24', 'HLT_IsoTkMu22', ],
+            2017 : [ 'HLT_IsoMu24', 'HLT_IsoMu27' ],
+            2018 : [ 'HLT_IsoMu24', 'HLT_IsoMu27' ],
+        }
+        self.triggers_ele = self.triggerList_ele[self.era]
+        self.triggers_mu = self.triggerList_mu[self.era]
+        self.pt_ele = 32.
+        self.pt_mu = 25.
+
     def beginJob(self):
         pass
 
@@ -106,6 +123,31 @@ class btagSFRatioFinder(Module):
 
     def getHistKey(self, sysKey):
         return '{}_{}'.format(self.histName, sysKey)
+
+    def get_p4(self, obj):
+        p4 = ROOT.TLorentzVector()
+        p4.SetPtEtaPhiM(obj.pt, obj.eta, obj.phi, obj.mass)
+        return p4
+
+    def check_lowMassVeto(self, leps):
+        is_lowmll = False
+        for lepi in range(len(leps)):
+            for lepj in range(lepi - 1):
+                mll = (self.get_p4(leps[lepi]) + self.get_p4(leps[lepj])).M()
+                if mll < 12.:
+                    is_lowmll = True
+                    break
+        return is_lowmll
+
+    def check_zveto(self, leps):
+        is_zveto = False
+        for lepi in range(len(leps)):
+            for lepj in range(lepi - 1):
+                mll = (self.get_p4(leps[lepi]) + self.get_p4(leps[lepj])).M()
+                if leps[lepi].charge * leps[lepj] < 0 and abs(mll - 90.) < 10.:
+                    is_zveto = True
+                    break
+        return is_zveto
 
     def overlaps_any(self, obj, refcollection, coneSize):
         has_overlap = False
@@ -200,6 +242,14 @@ class btagSFRatioFinder(Module):
         jet_pt = getattr(jet, pt_branch)
         return jet_pt >= 25.
 
+    def select_tau(self, tau):
+        return tau.pt > 20. and \
+               abs(tau.eta) < 2.3 and \
+               abs(tau.dz) < 0.2 and \
+               tau.idDeepTau2017v2VSjet_log >= 5 and \
+               tau.idDeepTau2017v2VSmu_log > 0 and \
+               tau.idDeepTau2017v2VSe_log > 0
+
     def beginFile(self, inputFile, outputFile, inputTree, wrappedOutputTree):
         for sysKey in self.branchMap:
             histKey = self.getHistKey(sysKey)
@@ -236,6 +286,47 @@ class btagSFRatioFinder(Module):
         jet_idxs_overlap_ele = [ ele.jetIdx for ele in eles_sel if ele.jetIdx >= 0 ]
         jet_idxs_overlap = list(sorted(set(jet_idxs_overlap_mu) | set(jet_idxs_overlap_ele)))
         jets_cleaned = [ jet for jet in jets if jet.jetIdx not in jet_idxs_overlap and self.preselect_jet(jet) ]
+
+        if self.applySLcuts:
+            # 1 tight lepton + trigger fired
+            lep_fakeable = list(sorted(
+                muons_sel + eles_sel,
+                key = lambda lep: self.cone_pt(lep, self.ele_wp if abs(lep.pdgId) != 13 else self.mu_wp),
+                reverse = True
+            ))
+            if not lep_fakeable:
+                return False
+            lep_lead = lep_fakeable[0]
+            if abs(lep_lead.pdgId) == 11:
+                if lep_lead.mvaTTH < self.ele_wp or \
+                   self.cone_pt(lep_lead, self.ele_wp) < self.pt_ele or \
+                   not any(bool(getattr(event, hlt_path)) for hlt_path in self.triggers_ele):
+                    return False
+            elif abs(lep_lead.pdgId) == 13:
+                if lep_lead.mvaTTH < self.mu_wp or \
+                   self.cone_pt(lep_lead, self.mu_wp) < self.pt_mu or \
+                   not any(bool(getattr(event, hlt_path)) for hlt_path in self.triggers_mu):
+                    return False
+            else:
+                assert(False)
+            # no more than 1 tight lepton
+            lep_tight = [ lep for lep in lep_fakeable if lep.mvaTTH > (self.ele_wp if abs(lep.pdgId) == 11 else self.mu_wp) ]
+            if len(lep_tight) > 1:
+                return False
+            assert(len(lep_tight) == 1)
+            # low mass resonance veto
+            eles_loose_uncleaned = [ ele for ele in eles if self.preselect_ele(ele, []) ]
+            if self.check_lowMassVeto(eles_loose_uncleaned + muons_loose):
+                return False
+            # Z veto
+            eles_loose = [ ele for ele in eles_loose_uncleaned if not self.overlaps_any(ele, muons_loose, 0.3) ]
+            if self.check_zveto(eles_loose) or self.check_zveto(muons_loose):
+                return False
+            # tau veto
+            taus = Collection(event, self.tauBranchName)
+            taus_tight = [ tau for tau in taus if self.select_tau(tau) ]
+            if taus_tight:
+                return False
 
         for sysKey in self.branchMap:
             if sysKey == 'pileupUp':
@@ -281,3 +372,6 @@ class btagSFRatioFinder(Module):
 btagSFRatio2016 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2016, outputFn, histName, ref_genWeight)
 btagSFRatio2017 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2017, outputFn, histName, ref_genWeight)
 btagSFRatio2018 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2018, outputFn, histName, ref_genWeight)
+btagSFRatioSL2016 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2016, outputFn, histName, ref_genWeight, True)
+btagSFRatioSL2017 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2017, outputFn, histName, ref_genWeight, True)
+btagSFRatioSL2018 = lambda outputFn, histName, ref_genWeight: btagSFRatioFinder(2018, outputFn, histName, ref_genWeight, True)
