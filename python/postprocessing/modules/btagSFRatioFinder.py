@@ -144,7 +144,7 @@ class btagSFRatioFinder(Module):
         for lepi in range(len(leps)):
             for lepj in range(lepi - 1):
                 mll = (self.get_p4(leps[lepi]) + self.get_p4(leps[lepj])).M()
-                if leps[lepi].charge * leps[lepj] < 0 and abs(mll - 90.) < 10.:
+                if leps[lepi].charge * leps[lepj].charge < 0 and abs(mll - 90.) < 10.:
                     is_zveto = True
                     break
         return is_zveto
