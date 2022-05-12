@@ -310,7 +310,7 @@ class btagSFRatioFinder(Module):
             else:
                 assert(False)
             # no more than 1 tight lepton
-            lep_tight = [ lep for lep in lep_fakeable if lep.mvaTTH > (self.ele_wp if abs(lep.pdgId) == 11 else self.mu_wp) ]
+            lep_tight = [ lep for lep in lep_fakeable if lep.mvaTTH >= (self.ele_wp if abs(lep.pdgId) == 11 else self.mu_wp) ]
             if len(lep_tight) > 1:
                 return False
             assert(len(lep_tight) == 1)
