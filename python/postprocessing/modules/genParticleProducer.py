@@ -318,6 +318,14 @@ def genVbosonSelection(genParticles):
     genParticles
   )
 
+def genTauFromV(genParticles):
+  return filter(
+    lambda genPart:
+    abs(genPart.pdgId) == 15 and genPart.genPartIdxMother >= 0 and \
+      abs(genParticles[genPart.genPartIdxMother].pdgId) in [ 23, 24 ],
+    genParticles
+  )
+
 def genNuSelection(genParticles):
   return filter(lambda genPart: abs(genPart.pdgId) in [12, 14, 16], genParticles)
 
@@ -712,6 +720,7 @@ genHiggsDaughtersEntry              = ("GenHiggsDaughters",              genHigg
 genNuEntry                          = ("GenNu",                          genNuSelection)
 genWZquarkEntry                     = ("GenWZQuark",                     genWZquarkSelection)
 genVbosonEntry                      = ("GenVbosons",                     genVbosonSelection)
+genTauFromVEntry                    = ("GenTauFromV",                    genTauFromV)
 genTauEntry                         = ("GenTau",                         (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_TAU)))
 genLeptonicTauEntry                 = ("GenLeptonicTau",                 (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_LEPTONIC_TAU)))
 genHadronicTauEntry                 = ("GenHadronicTau",                 (lambda genParticles : genTauSelection(genParticles, SelectionOptions.SAVE_HADRONIC_TAU)))
@@ -744,6 +753,7 @@ genTau                         = lambda : genParticleProducer(dict([genTauEntry]
 genNu                          = lambda : genParticleProducer(dict([genNuEntry]))                          # all neutrinos
 genWZquark                     = lambda : genParticleProducer(dict([genWZquarkEntry]))                     # all quarks coming from W or Z decay
 genVboson                      = lambda : genParticleProducer(dict([genVbosonEntry]))                      # all W and Z bosons (first in the decay chain)
+genTauFromVboson               = lambda : genParticleProducer(dict([genTauFromVEntry]))                    # taus from W or Z
 genLeptonicTau                 = lambda : genParticleProducer(dict([genLeptonicTauEntry]))                 # only taus (tau(l)) decaying leptonically: tau(l) -> l vl vtau
 genHadronicTau                 = lambda : genParticleProducer(dict([genHadronicTauEntry]))                 # only taus (tau(h)) decaying hadronically: tau(h) -> tauh vtau (NB! NOT RECONSTRUCTED GEN HAD TAU!)
 genLepFromTau                  = lambda : genParticleProducer(dict([genLepFromTauEntry]))                  # only leptons (l) coming from tau decay: tau -> l vl vtau
@@ -772,6 +782,7 @@ genAll = lambda : genParticleProducer(dict([
     genNuEntry,
     genWZquarkEntry,
     genVbosonEntry,
+    genTauFromVEntry,
     genTauEntry,
     genTopEntry,
     genLepFromTopEntry,
